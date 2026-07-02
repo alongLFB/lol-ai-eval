@@ -15,7 +15,8 @@ export function AIEvaluation({ text }: { text: string }) {
     const chars = Array.from(text);
     const timer = setInterval(() => {
       if (i < chars.length) {
-        setDisplayedText((prev) => prev + chars[i]);
+        const char = chars[i];
+        setDisplayedText((prev) => prev + char);
         i++;
       } else {
         setIsTyping(false);
