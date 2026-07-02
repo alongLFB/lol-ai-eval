@@ -132,7 +132,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const summoner: RiotSummoner = await fetchRiot(summonerUrl);
 
     // 3. Get League
-    const leagueUrl = `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/${account.puuid}`;
+    const leagueUrl = `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summoner.id}`;
     const leagues: LeagueEntry[] = await fetchRiot(leagueUrl);
     const soloQueue = leagues.find(l => l.queueType === 'RANKED_SOLO_5x5') || leagues[0];
 
