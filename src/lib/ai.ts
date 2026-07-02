@@ -38,7 +38,7 @@ export async function generateAIEvaluation(profile: SummonerProfileData): Promis
 可以是对其拉跨操作的疯狂嘲讽，或者是对其超神表现的热血赞美。
 
 玩家信息：
-- ID: ${profile.gameName}#${profile.tagLine}
+- ID: [PLAYER_NAME]
 - 当前段位: ${profile.tier} ${profile.rank}
 - 整体胜率: ${profile.winRate}%
 
@@ -47,7 +47,7 @@ export async function generateAIEvaluation(profile: SummonerProfileData): Promis
 - 平均 K/D/A: ${avgKills} / ${avgDeaths} / ${avgAssists} (场均 KDA: ${avgKDA})
 - 近期绝活英雄: ${mostPlayedChamps}
 
-请直接输出你的趣味评价，不要带任何多余的解释。要有情绪，有爆发力！`;
+请直接输出你的趣味评价，不要带任何多余的解释。要有情绪，有爆发力！请务必在评价中用 [PLAYER_NAME] 来称呼该玩家，不要自己乱编名字！`;
 
   // Use mock response if no API key is set
   if (!process.env.AI_API_KEY) {
@@ -73,7 +73,8 @@ export async function generateAIEvaluation(profile: SummonerProfileData): Promis
       max_completion_tokens: 300,
     });
 
-    return response.choices[0]?.message?.content || "虚空发生了一点扰动，评价数据丢失了。";
+    const content = response.choices[0]?.message?.content || "虚空发生了一点扰动，评价数据丢失了。";
+    return content.replace(/\[PLAYER_NAME\]/g, `${profile.gameName}#${profile.tagLine}`);
   } catch (error) {
     console.error("AI API Error:", error);
     return "糟糕！皮城的技术出了点问题，AI 解说员暂时罢工了，请稍后再试！";
