@@ -70,7 +70,7 @@ export async function generateAIEvaluation(profile: SummonerProfileData): Promis
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
-      max_tokens: 300,
+      max_completion_tokens: 300,
     });
 
     return response.choices[0]?.message?.content || "虚空发生了一点扰动，评价数据丢失了。";
