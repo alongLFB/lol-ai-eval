@@ -20,7 +20,7 @@ jobs:
             mkdir -p ~/github
             cd ~/github
             if [ ! -d "lol-ai-eval" ]; then
-              git clone git@github.com:alongLFB/lol-ai-eval.git
+              git clone https://github.com/alongLFB/lol-ai-eval.git
             fi
             cd lol-ai-eval
             git pull origin master
