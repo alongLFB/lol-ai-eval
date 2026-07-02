@@ -29,4 +29,6 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             npm ci
             npm run build
-            pm2 restart lol-ai-eval || pm2 start npm --name "lol-ai-eval" -- start
+            export APP_PORT=$(grep -E '^PORT=' .env.local | cut -d '=' -f2)
+            export APP_PORT=${APP_PORT:-3005}
+            pm2 restart lol-ai-eval --update-env || pm2 start npm --name "lol-ai-eval" -- start -- -p $APP_PORT
