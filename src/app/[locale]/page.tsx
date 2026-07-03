@@ -7,23 +7,12 @@ import { AIEvaluation } from '@/components/AIEvaluation';
 import { SummonerProfileData } from '@/lib/riot';
 import { toBlob } from 'html-to-image';
 import { Share2, Loader2, Copy, Check, RefreshCw, Clock } from 'lucide-react';
-
-/**
- * Format an ISO timestamp into a human-readable relative time string (Chinese).
- */
-function getRelativeUpdateTime(isoTimestamp: string): string {
-  const diff = Date.now() - new Date(isoTimestamp).getTime();
-  const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return '刚刚更新';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} 分钟前更新`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} 小时前更新`;
-  const days = Math.floor(hours / 24);
-  return `${days} 天前更新`;
-}
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function Home() {
+  const t = useTranslations('HomePage');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<{
@@ -45,14 +34,33 @@ export default function Home() {
   // Tick the relative time display every 30 seconds
   useEffect(() => {
     if (!lastUpdated) return;
-    setRelativeTime(getRelativeUpdateTime(lastUpdated));
-
-    const interval = setInterval(() => {
-      setRelativeTime(getRelativeUpdateTime(lastUpdated));
-    }, 30_000);
+    
+    const updateRelativeTime = () => {
+      const diff = Date.now() - new Date(lastUpdated).getTime();
+      const seconds = Math.floor(diff / 1000);
+      if (seconds < 60) {
+        setRelativeTime(t('justUpdated'));
+      } else {
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) {
+          setRelativeTime(t('minutesAgo', { minutes }));
+        } else {
+          const hours = Math.floor(minutes / 60);
+          if (hours < 24) {
+            setRelativeTime(t('hoursAgo', { hours }));
+          } else {
+            const days = Math.floor(hours / 24);
+            setRelativeTime(t('daysAgo', { days }));
+          }
+        }
+      }
+    };
+    
+    updateRelativeTime();
+    const interval = setInterval(updateRelativeTime, 30_000);
 
     return () => clearInterval(interval);
-  }, [lastUpdated]);
+  }, [lastUpdated, t]);
 
   const handleSearch = async (gameName: string, tagLine: string, server: string) => {
     setIsLoading(true);
@@ -72,7 +80,7 @@ export default function Home() {
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.error || '获取数据失败');
+        throw new Error(json.error || t('fetchFailed'));
       }
 
       setData({ profile: json.profile, evaluation: json.evaluation });
@@ -104,7 +112,7 @@ export default function Home() {
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.error || '更新失败');
+        throw new Error(json.error || t('fetchFailed'));
       }
 
       setData({ profile: json.profile, evaluation: json.evaluation });
@@ -114,7 +122,7 @@ export default function Home() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, currentGameName, currentTagLine, currentServer]);
+  }, [isRefreshing, currentGameName, currentTagLine, currentServer, t]);
 
   const handleShare = async () => {
     const el = document.getElementById('share-container');
@@ -135,8 +143,8 @@ export default function Home() {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
-            title: '我的 AI 召唤师神谕',
-            text: '快来看看我的英雄联盟战力裁决！',
+            title: t('title'),
+            text: t('subtitle'),
             files: [file]
           });
           shared = true;
@@ -156,7 +164,7 @@ export default function Home() {
       }
     } catch (e) {
       console.error(e);
-      alert('生成分享图片失败，请稍后再试。');
+      alert(t('shareFailed'));
     } finally {
       setIsSharing(false);
     }
@@ -185,7 +193,7 @@ export default function Home() {
       setTimeout(() => setCopySuccess(false), 3000);
     } catch (e) {
       console.error("Clipboard copy failed:", e);
-      alert('复制图片到剪贴板失败，请手动右键保存或尝试使用分享/下载按钮。');
+      alert(t('copyFailed'));
     } finally {
       setIsCopying(false);
     }
@@ -193,6 +201,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white overflow-hidden relative selection:bg-purple-500/30">
+      <LanguageSwitcher />
       {/* Background Decor */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-gradient-to-b from-blue-900/20 to-purple-900/10 blur-[100px] rounded-full pointer-events-none" />
       
@@ -202,10 +211,10 @@ export default function Home() {
             LEAGUE OF LEGENDS STATS
           </div>
           <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-purple-400 to-blue-600 drop-shadow-sm">
-            AI 召唤师神谕
+            {t('title')}
           </h1>
           <p className="text-gray-400 text-lg max-w-xl mx-auto leading-relaxed">
-            输入你的 Riot ID，让虚空枢纽 of AI 为你的近期战绩给出最真实、最毒舌的裁决。
+            {t('subtitle')}
           </p>
         </div>
 
@@ -237,7 +246,7 @@ export default function Home() {
                 className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-200 rounded-full font-bold shadow-lg transition-all border border-gray-800 disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? '正在更新...' : '更新战绩'}
+                {isRefreshing ? t('updating') : t('updateStats')}
               </button>
 
               {/* Copy Image Button */}
@@ -247,7 +256,7 @@ export default function Home() {
                 className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-200 rounded-full font-bold shadow-lg transition-all border border-gray-800"
               >
                 {isCopying ? <Loader2 className="w-5 h-5 animate-spin" /> : copySuccess ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}
-                {isCopying ? '正在生成...' : copySuccess ? '已复制到剪贴板！' : '复制大字报图片'}
+                {isCopying ? t('generating') : copySuccess ? t('copied') : t('copyPoster')}
               </button>
 
               {/* Share / Download Button */}
@@ -257,7 +266,7 @@ export default function Home() {
                 className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-500 hover:to-purple-500 rounded-full font-bold shadow-lg shadow-purple-900/20 transition-all border border-purple-500/30"
               >
                 {isSharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
-                {isSharing ? '正在生成...' : '分享/下载大字报'}
+                {isSharing ? t('generating') : t('sharePoster')}
               </button>
             </div>
             
@@ -268,8 +277,8 @@ export default function Home() {
                   <Check className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <div className="font-bold text-sm">复制成功</div>
-                  <div className="text-xs text-gray-400">大字报图片已存入剪贴板，可直接粘贴分享！</div>
+                  <div className="font-bold text-sm">{t('copySuccessTitle')}</div>
+                  <div className="text-xs text-gray-400">{t('copySuccessDesc')}</div>
                 </div>
               </div>
             )}

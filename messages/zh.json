@@ -1,0 +1,34 @@
+{
+  "HomePage": {
+    "title": "AI 召唤师神谕",
+    "subtitle": "输入你的 Riot ID，让虚空枢纽 of AI 为你的近期战绩给出最真实、最毒舌的裁决。",
+    "justUpdated": "刚刚更新",
+    "minutesAgo": "{minutes} 分钟前更新",
+    "hoursAgo": "{hours} 小时前更新",
+    "daysAgo": "{days} 天前更新",
+    "updateStats": "更新战绩",
+    "updating": "正在更新...",
+    "copyPoster": "复制大字报图片",
+    "generating": "正在生成...",
+    "copied": "已复制到剪贴板！",
+    "sharePoster": "分享/下载大字报",
+    "fetchFailed": "获取数据失败",
+    "copyFailed": "复制图片到剪贴板失败，请手动右键保存或尝试使用分享/下载按钮。",
+    "shareFailed": "生成分享图片失败，请稍后再试。",
+    "copySuccessTitle": "复制成功",
+    "copySuccessDesc": "大字报图片已存入剪贴板，可直接粘贴分享！"
+  },
+  "SearchBar": {
+    "placeholder": "游戏ID#TAG (例如: CatchingTheFire#EUW)",
+    "formatError": "格式错误！请输入带有 '#' 的完整 ID，例如 CatchingTheFire#EUW",
+    "connecting": "连接中...",
+    "insight": "洞察",
+    "servers": {
+      "EUW": "Europe West",
+      "ME": "Middle East",
+      "NA": "North America",
+      "KR": "Korea",
+      "TW": "Taiwan"
+    }
+  }
+}

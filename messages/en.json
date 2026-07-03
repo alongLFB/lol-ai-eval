@@ -1,0 +1,34 @@
+{
+  "HomePage": {
+    "title": "AI Summoner Oracle",
+    "subtitle": "Enter your Riot ID and let the Void Nexus of AI deliver the most brutal and honest verdict on your recent match history.",
+    "justUpdated": "Just updated",
+    "minutesAgo": "Updated {minutes}m ago",
+    "hoursAgo": "Updated {hours}h ago",
+    "daysAgo": "Updated {days}d ago",
+    "updateStats": "Update Stats",
+    "updating": "Updating...",
+    "copyPoster": "Copy Poster",
+    "generating": "Generating...",
+    "copied": "Copied to clipboard!",
+    "sharePoster": "Share / Download Poster",
+    "fetchFailed": "Failed to fetch data",
+    "copyFailed": "Failed to copy image to clipboard. Please manually save it or try the share button.",
+    "shareFailed": "Failed to generate share image, please try again later.",
+    "copySuccessTitle": "Copy Successful",
+    "copySuccessDesc": "The poster image has been copied to your clipboard!"
+  },
+  "SearchBar": {
+    "placeholder": "GameID#TAG (e.g. CatchingTheFire#EUW)",
+    "formatError": "Invalid format! Please enter a full ID with '#', e.g. CatchingTheFire#EUW",
+    "connecting": "Connecting...",
+    "insight": "Insight",
+    "servers": {
+      "EUW": "Europe West",
+      "ME": "Middle East",
+      "NA": "North America",
+      "KR": "Korea",
+      "TW": "Taiwan"
+    }
+  }
+}

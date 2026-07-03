@@ -2,20 +2,19 @@
 import { useState } from 'react';
 import { Search, Loader2, Globe, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface SearchBarProps {
   onSearch: (gameName: string, tagLine: string, server: string) => void;
   isLoading: boolean;
 }
 
-const SERVERS = [
-  { id: 'EUW', label: 'Europe West' },
-  { id: 'ME', label: 'Middle East' },
-];
+const SERVER_IDS = ['EUW', 'ME', 'NA', 'KR', 'TW'] as const;
 
 export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
+  const t = useTranslations('SearchBar');
   const [input, setInput] = useState('');
-  const [server, setServer] = useState(SERVERS[0].id);
+  const [server, setServer] = useState<string>(SERVER_IDS[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +23,7 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
     // Parse ID like "CatchingTheFire#EUW"
     const [gameName, tagLine] = input.split('#');
     if (!gameName || !tagLine) {
-      alert("格式错误！请输入带有 '#' 的完整 ID，例如 CatchingTheFire#EUW");
+      alert(t('formatError'));
       return;
     }
     
@@ -45,8 +44,10 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
               className="bg-transparent text-white outline-none appearance-none cursor-pointer text-base sm:text-sm font-bold w-full pr-7"
               disabled={isLoading}
             >
-              {SERVERS.map(s => (
-                <option key={s.id} value={s.id} className="bg-gray-800 text-gray-100">{s.label}</option>
+              {SERVER_IDS.map(id => (
+                <option key={id} value={id} className="bg-gray-800 text-gray-100">
+                  {t(`servers.${id}`)}
+                </option>
               ))}
             </select>
             <ChevronDown className="w-4 h-4 text-blue-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -57,7 +58,7 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="游戏ID#TAG (例如: CatchingTheFire#EUW)"
+          placeholder={t('placeholder')}
           className="w-full sm:flex-1 bg-transparent border-none outline-none text-gray-100 px-4 py-3 sm:py-2 placeholder-gray-500 text-base sm:text-lg"
           disabled={isLoading}
         />
@@ -73,12 +74,12 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>连接中...</span>
+              <span>{t('connecting')}</span>
             </>
           ) : (
             <>
               <Search className="w-5 h-5" />
-              <span>洞察</span>
+              <span>{t('insight')}</span>
             </>
           )}
         </button>
