@@ -216,10 +216,10 @@ function getQueueName(queueId: number): string {
 
 // ── Multikill label ──
 function getMultikillLabel(p: ParticipantDto): string | null {
-  if (p.pentaKills > 0) return '五杀';
-  if (p.quadraKills > 0) return '四杀';
-  if (p.tripleKills > 0) return '三杀';
-  if (p.doubleKills > 0) return '双杀';
+  if (p.pentaKills > 0) return 'Penta Kill';
+  if (p.quadraKills > 0) return 'Quadra Kill';
+  if (p.tripleKills > 0) return 'Triple Kill';
+  if (p.doubleKills > 0) return 'Double Kill';
   return null;
 }
 

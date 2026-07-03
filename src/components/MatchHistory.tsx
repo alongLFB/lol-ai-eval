@@ -1013,7 +1013,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     onClick={() => handleToggleMatch(match)}
                   >
                     {/* Game mode + outcome */}
-                    <div className="flex flex-col items-start gap-0.5 min-w-[70px] shrink-0">
+                    <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
                       <span className={cn(
                         "text-[9px] font-bold px-1.5 py-0.5 rounded border leading-tight",
                         getQueueStyle(match.queueId)
@@ -1032,7 +1032,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* Champion + Spells + Runes */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 w-[110px] shrink-0">
                       <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border border-gray-700">
                         <img
                           crossOrigin="anonymous"
@@ -1066,7 +1066,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* KDA block */}
-                    <div className="flex flex-col items-center min-w-[95px] shrink-0">
+                    <div className="flex flex-col items-center w-[120px] shrink-0">
                       <span className="text-gray-100 font-bold text-sm sm:text-base tracking-wider font-mono">
                         {match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}
                       </span>
@@ -1084,7 +1084,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* CS & Vision */}
-                    <div className="flex flex-col items-center min-w-[55px] shrink-0">
+                    <div className="flex flex-col items-center w-[65px] shrink-0">
                       <span className="text-xs text-gray-300 font-mono">CS {match.cs}</span>
                       <span className="text-[9px] text-gray-500">{match.csPerMin}/m</span>
                       <div className="flex items-center gap-0.5 mt-0.5 text-[9px] text-gray-500">
@@ -1094,7 +1094,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* Items row */}
-                    <div className="flex items-center gap-0.5 shrink-0">
+                    <div className="flex items-center gap-0.5 w-[190px] shrink-0">
                       {match.items.slice(0, 6).map((itemId, i) => (
                         <div key={i} className="w-6.5 h-6.5 rounded-sm overflow-hidden bg-gray-800/80 border border-gray-700/50">
                           {itemId > 0 ? (
@@ -1120,7 +1120,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* Badges, Time and Arrow */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex-1 flex items-center justify-end gap-2 shrink-0">
                       {match.multikill && (
                         <span className={cn(
                           "text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm leading-none",
@@ -1141,7 +1141,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       
                       {/* Premium expand button visual indicator */}
                       <div className={cn(
-                        "w-7 h-7 flex items-center justify-center rounded-md border transition-colors",
+                        "w-7 h-7 flex items-center justify-center rounded-md border transition-colors shrink-0 ml-1",
                         match.win 
                           ? "bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/25" 
                           : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/25"
