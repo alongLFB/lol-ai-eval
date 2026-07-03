@@ -3,9 +3,9 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRankInfo } from '@/lib/riot';
 import { cn } from '@/lib/utils';
-import { Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users } from 'lucide-react';
+import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // ── Summoner Spell ID → Data Dragon key mapping ──
 const SUMMONER_SPELL_MAP: Record<number, string> = {
@@ -316,8 +316,35 @@ function MatchDetailPanel({
 // ── Main MatchHistory Component ──
 export function MatchHistory({ profile, server }: { profile: SummonerProfileData; server: string }) {
   const t = useTranslations('MatchHistory');
+  const locale = useLocale();
   const latestPatch = profile.latestPatch || '16.13.1';
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+  const [analyzingMatchId, setAnalyzingMatchId] = useState<string | null>(null);
+  const [matchAnalysisResults, setMatchAnalysisResults] = useState<Record<string, string>>({});
+
+  const handleAnalyzeMatch = async (e: React.MouseEvent, match: EnrichedMatchData) => {
+    e.stopPropagation();
+    if (expandedMatch !== match.matchId) {
+      setExpandedMatch(match.matchId);
+    }
+    if (matchAnalysisResults[match.matchId] || analyzingMatchId === match.matchId) return;
+    setAnalyzingMatchId(match.matchId);
+    try {
+      const res = await fetch('/api/analyze-match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchData: match, locale })
+      });
+      const data = await res.json();
+      if (data.evaluation) {
+        setMatchAnalysisResults(prev => ({ ...prev, [match.matchId]: data.evaluation }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAnalyzingMatchId(null);
+    }
+  };
   const [rankCache, setRankCache] = useState<Record<string, MatchRankData>>({});
   const [showAllTeammates, setShowAllTeammates] = useState(false);
   const [activeTab, setActiveTab] = useState<'ALL' | 'SOLO' | 'FLEX' | 'ARAM'>('ALL');
@@ -1018,7 +1045,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       match.win ? "bg-blue-500" : "bg-red-500"
                     )} />
 
-                    <div className="flex flex-1 items-center gap-3 py-3 pl-3 pr-2 overflow-hidden min-h-[96px]">
+                    <div className="flex flex-1 items-center justify-between gap-3 py-3 pl-4 pr-3 overflow-hidden min-h-[96px]">
+                      <div className="flex items-center gap-4">
                       {/* 1. Game mode + outcome (w-[100px]) */}
                       <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
                         <span className={cn(
@@ -1110,9 +1138,10 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           </div>
                         )}
                       </div>
+                      </div>
 
                       {/* 5. Items row & Badges (flex-1 flex overflow-hidden) */}
-                      <div className="flex-1 flex items-center justify-start gap-2 overflow-hidden shrink-0 min-w-[200px]">
+                      <div className="flex items-center justify-end gap-3 shrink-0 min-w-0 flex-1 pl-2">
                         {/* Items */}
                         <div className="flex items-center gap-0.5 shrink-0">
                           {match.items.slice(0, 6).map((itemId, i) => (
@@ -1163,7 +1192,20 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* 6. Arrow button right fixed */}
-                    <div className="w-[40px] flex items-center justify-center shrink-0 pr-1">
+                    <div className="w-[40px] flex flex-col items-center justify-center shrink-0 pr-1 gap-1.5">
+                      <button
+                        onClick={(e) => handleAnalyzeMatch(e, match)}
+                        disabled={analyzingMatchId === match.matchId}
+                        className={cn(
+                          "w-7 h-7 flex items-center justify-center rounded-md border transition-colors cursor-pointer disabled:opacity-50",
+                          match.win 
+                            ? "border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20" 
+                            : "border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
+                        )}
+                        title={t('aiAnalyzeMatch')}
+                      >
+                        <Bot className={cn("w-4 h-4", analyzingMatchId === match.matchId && "animate-pulse")} />
+                      </button>
                       <div className={cn(
                         "w-7 h-7 flex items-center justify-center rounded-md border transition-colors",
                         match.win 
@@ -1210,16 +1252,31 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         <span className="text-[10px] text-gray-500">
                           {getRelativeTime(match.gameCreation, t)}
                         </span>
-                        <div className={cn(
-                          "w-6 h-6 flex items-center justify-center rounded border ml-1",
-                          match.win 
-                            ? "border-blue-500/30 bg-blue-500/10 text-blue-400" 
-                            : "border-red-500/30 bg-red-500/10 text-red-400"
-                        )}>
-                          <ChevronDown className={cn(
-                            "w-3.5 h-3.5 transition-transform duration-250",
-                            isExpanded && "rotate-180"
-                          )} />
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => handleAnalyzeMatch(e, match)}
+                            disabled={analyzingMatchId === match.matchId}
+                            className={cn(
+                              "w-6 h-6 flex items-center justify-center rounded border",
+                              match.win 
+                                ? "border-purple-500/30 bg-purple-500/10 text-purple-400" 
+                                : "border-purple-500/30 bg-purple-500/10 text-purple-400"
+                            )}
+                            title={t('aiAnalyzeMatch')}
+                          >
+                            <Bot className={cn("w-3.5 h-3.5", analyzingMatchId === match.matchId && "animate-pulse")} />
+                          </button>
+                          <div className={cn(
+                            "w-6 h-6 flex items-center justify-center rounded border",
+                            match.win 
+                              ? "border-blue-500/30 bg-blue-500/10 text-blue-400" 
+                              : "border-red-500/30 bg-red-500/10 text-red-400"
+                          )}>
+                            <ChevronDown className={cn(
+                              "w-3.5 h-3.5 transition-transform duration-250",
+                              isExpanded && "rotate-180"
+                            )} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1315,12 +1372,37 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   {/* Expanded Detail Panel */}
                   <AnimatePresence>
                     {isExpanded && (
-                      <MatchDetailPanel
-                        match={match}
-                        patch={latestPatch}
-                        currentPuuid={currentPuuid}
-                        rankData={matchRankData}
-                      />
+                      <div className="flex flex-col border-t border-gray-800">
+                        {/* AI Analysis Block */}
+                        {(analyzingMatchId === match.matchId || matchAnalysisResults[match.matchId]) && (
+                          <div className="p-4 bg-gradient-to-r from-purple-900/20 via-purple-900/5 to-transparent">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 bg-purple-500/10 border border-purple-500/30 rounded-lg shrink-0 mt-0.5 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                                <Bot className={cn("w-5 h-5 text-purple-400", analyzingMatchId === match.matchId && "animate-pulse")} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-bold text-purple-300 mb-1.5 flex items-center gap-2">
+                                  {t('aiReviewTitle')}
+                                  {analyzingMatchId === match.matchId && (
+                                    <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                                  )}
+                                </h4>
+                                {analyzingMatchId === match.matchId ? (
+                                  <p className="text-sm text-purple-300/70 animate-pulse">{t('analyzingMatch')}</p>
+                                ) : (
+                                  <p className="text-[13px] text-gray-200 leading-relaxed whitespace-pre-wrap">{matchAnalysisResults[match.matchId]}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <MatchDetailPanel
+                          match={match}
+                          patch={latestPatch}
+                          currentPuuid={currentPuuid}
+                          rankData={matchRankData}
+                        />
+                      </div>
                     )}
                   </AnimatePresence>
                 </div>

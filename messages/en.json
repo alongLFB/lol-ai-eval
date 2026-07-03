@@ -123,5 +123,8 @@
       "UNRANKED": "Unranked"
     }
   },
-  "switchLanguage": "Switch to Chinese"
+  "switchLanguage": "Switch to Chinese",
+  "aiAnalyzeMatch": "AI Review Match",
+  "analyzingMatch": "AI is generating review...",
+  "aiReviewTitle": "AI Match Review"
 }

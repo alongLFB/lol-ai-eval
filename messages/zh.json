@@ -123,5 +123,8 @@
       "UNRANKED": "无段位"
     }
   },
-  "switchLanguage": "切换到英文"
+  "switchLanguage": "切换到英文",
+  "aiAnalyzeMatch": "AI复盘本局",
+  "analyzingMatch": "AI正在生成复盘...",
+  "aiReviewTitle": "AI 战局复盘"
 }
