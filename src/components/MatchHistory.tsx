@@ -132,6 +132,14 @@ function getTierChineseName(tier: string, t: any): string {
   return t(`tiers.${tier.toUpperCase()}`) || t('tiers.UNRANKED');
 }
 
+function getLocalizedAverageRank(averageRank: string, t: any): string {
+  if (!averageRank || averageRank === 'UNRANKED') return t('tiers.UNRANKED');
+  const parts = averageRank.split(' ');
+  const tier = parts[0].toUpperCase();
+  const division = parts.length > 1 ? parts.slice(1).join(' ') : '';
+  return `${getTierChineseName(tier, t)} ${division}`.trim();
+}
+
 function formatTierShort(tier: string, rank: string): string {
   if (tier === 'UNRANKED') return 'Unranked';
   const tName = tier.charAt(0) + tier.slice(1).toLowerCase();
@@ -293,7 +301,7 @@ function MatchDetailPanel({
           <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg bg-gray-800/50 border border-gray-700/50 max-w-sm mx-auto">
             <Trophy className="w-3.5 h-3.5 text-yellow-500" />
             <span className="text-xs text-gray-400">{t('averageRank')}</span>
-            <span className="text-xs font-bold text-gray-200">{rankData.averageRank}</span>
+            <span className="text-xs font-bold text-gray-200">{getLocalizedAverageRank(rankData.averageRank, t)}</span>
           </div>
         )}
         {rankData?.loading && (
@@ -1131,12 +1139,6 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         <span className="text-[10px] text-gray-400 mt-0.5 truncate w-full">
                           CS {match.cs} ({match.csPerMin})
                         </span>
-                        {currentPuuid && matchRankData && matchRankData.ranks[currentPuuid] && matchRankData.ranks[currentPuuid].tier !== 'UNRANKED' && (
-                          <div className="flex items-center gap-1 mt-1 truncate w-full">
-                            <Trophy className={cn("w-2.5 h-2.5 shrink-0", getTierColor(matchRankData.ranks[currentPuuid].tier))} />
-                            <span className="text-[10px] text-gray-300 font-medium truncate">{getTierChineseName(matchRankData.ranks[currentPuuid].tier, t)} {matchRankData.ranks[currentPuuid].rank}</span>
-                          </div>
-                        )}
                       </div>
                       </div>
 
