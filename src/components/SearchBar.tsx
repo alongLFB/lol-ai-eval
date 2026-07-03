@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Search, Loader2, Globe } from 'lucide-react';
+import { Search, Loader2, Globe, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SearchBarProps {
@@ -38,16 +38,19 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
         
         <div className="flex items-center w-full sm:w-auto pl-3 pr-2 border-b sm:border-b-0 sm:border-r border-gray-700 pb-2 sm:pb-0 pt-1 sm:pt-0">
           <Globe className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
-          <select 
-            value={server} 
-            onChange={(e) => setServer(e.target.value)}
-            className="bg-transparent text-gray-300 outline-none appearance-none cursor-pointer text-base sm:text-sm font-medium w-full pr-4"
-            disabled={isLoading}
-          >
-            {SERVERS.map(s => (
-              <option key={s.id} value={s.id} className="bg-gray-800 text-gray-100">{s.label}</option>
-            ))}
-          </select>
+          <div className="relative w-full sm:w-auto">
+            <select 
+              value={server} 
+              onChange={(e) => setServer(e.target.value)}
+              className="bg-transparent text-white outline-none appearance-none cursor-pointer text-base sm:text-sm font-bold w-full pr-7"
+              disabled={isLoading}
+            >
+              {SERVERS.map(s => (
+                <option key={s.id} value={s.id} className="bg-gray-800 text-gray-100">{s.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-blue-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
         </div>
 
         <input
