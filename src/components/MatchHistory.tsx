@@ -1106,10 +1106,10 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         </div>
                       </div>
 
-                      {/* 3. KDA block (w-[100px]) */}
-                      <div className="flex flex-col items-start w-[100px] shrink-0">
-                        <span className="text-gray-100 font-bold text-sm tracking-wider font-mono truncate w-full">
-                          {match.kills} <span className="text-gray-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-gray-500 font-normal">/</span> {match.assists}
+                      {/* 3. KDA block (w-[110px]) */}
+                      <div className="flex flex-col items-start w-[110px] shrink-0">
+                        <span className="text-gray-100 font-bold text-sm tracking-normal font-mono truncate w-full">
+                          {match.kills} <span className="text-gray-500 font-normal mx-0.5">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-gray-500 font-normal mx-0.5">/</span> {match.assists}
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className={cn(
