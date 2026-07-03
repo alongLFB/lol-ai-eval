@@ -16,11 +16,13 @@ export default function Home() {
     evaluation: string;
   } | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [currentServer, setCurrentServer] = useState('EUW');
 
   const handleSearch = async (gameName: string, tagLine: string, server: string) => {
     setIsLoading(true);
     setError(null);
     setData(null);
+    setCurrentServer(server);
 
     try {
       const res = await fetch('/api/analyze', {
@@ -132,7 +134,7 @@ export default function Home() {
             <div id="share-container" className="p-4 sm:p-8 rounded-3xl bg-[#0a0a0c] border border-gray-800 shadow-2xl relative">
               <AIEvaluation text={data.evaluation} />
               <div className="mt-8">
-                <MatchHistory profile={data.profile} />
+                <MatchHistory profile={data.profile} server={currentServer} />
               </div>
               <div className="absolute top-4 right-6 opacity-20 hidden sm:block">
                 <span className="text-xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">

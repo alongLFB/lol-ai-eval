@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant } from '@/lib/riot';
+import { useState, useCallback } from 'react';
+import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRankInfo } from '@/lib/riot';
 import { cn } from '@/lib/utils';
-import { Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star } from 'lucide-react';
+import { Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ── Summoner Spell ID → Data Dragon key mapping ──
@@ -68,7 +68,6 @@ function getRuneIconUrl(runeId: number, isKeystone: boolean): string {
   if (RUNE_STYLE_ICONS[runeId]) {
     return `https://ddragon.leagueoflegends.com/cdn/img/${RUNE_STYLE_ICONS[runeId]}`;
   }
-  // Fallback: use the style icon
   return `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png`;
 }
 
@@ -118,8 +117,47 @@ function getMultikillStyle(multikill: string) {
   }
 }
 
+// ── Tier display color ──
+function getTierColor(tier: string): string {
+  switch (tier) {
+    case 'IRON': return 'text-gray-400';
+    case 'BRONZE': return 'text-amber-700';
+    case 'SILVER': return 'text-gray-300';
+    case 'GOLD': return 'text-yellow-400';
+    case 'PLATINUM': return 'text-teal-400';
+    case 'EMERALD': return 'text-emerald-400';
+    case 'DIAMOND': return 'text-blue-400';
+    case 'MASTER': return 'text-purple-400';
+    case 'GRANDMASTER': return 'text-red-400';
+    case 'CHALLENGER': return 'text-amber-300';
+    default: return 'text-gray-500';
+  }
+}
+
+function formatTierShort(tier: string, rank: string): string {
+  if (tier === 'UNRANKED') return 'Unranked';
+  const tName = tier.charAt(0) + tier.slice(1).toLowerCase();
+  // Master+ don't have subdivisions
+  if (['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(tier)) return tName;
+  return `${tName} ${rank}`;
+}
+
+// ── Cached rank data type ──
+interface MatchRankData {
+  ranks: Record<string, PlayerRankInfo>; // puuid -> rank
+  averageRank: string;
+  loading: boolean;
+}
+
 // ── Match Detail Expanded Panel ──
-function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatchData; patch: string; currentPuuid?: string }) {
+function MatchDetailPanel({
+  match, patch, currentPuuid, rankData
+}: {
+  match: EnrichedMatchData;
+  patch: string;
+  currentPuuid?: string;
+  rankData?: MatchRankData;
+}) {
   const blueTeam = match.allParticipants.filter(p => p.teamId === 100);
   const redTeam = match.allParticipants.filter(p => p.teamId === 200);
   const blueWon = blueTeam[0]?.win ?? false;
@@ -134,7 +172,8 @@ function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatch
         won ? "bg-blue-900/40 text-blue-300" : "bg-red-900/40 text-red-300"
       )}>
         <span>{won ? '胜利' : '败北'} ({teamLabel})</span>
-        <div className="flex items-center gap-8 text-xs text-gray-400 font-normal">
+        <div className="flex items-center gap-6 text-xs text-gray-400 font-normal">
+          <span className="w-14 text-center">段位</span>
           <span className="w-16 text-center">KDA</span>
           <span className="w-16 text-center">伤害</span>
           <span className="w-12 text-center">CS</span>
@@ -148,6 +187,7 @@ function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatch
       )}>
         {team.map((p, idx) => {
           const isMe = currentPuuid ? p.puuid === currentPuuid : false;
+          const pRank = rankData?.ranks[p.puuid];
           return (
             <div key={p.puuid + idx} className={cn(
               "flex items-center justify-between px-4 py-2.5 transition-colors",
@@ -182,7 +222,19 @@ function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatch
               </div>
 
               {/* Right: stats */}
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-6">
+                {/* Rank */}
+                <div className="w-14 text-center">
+                  {rankData?.loading ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-gray-500 mx-auto" />
+                  ) : pRank ? (
+                    <span className={cn("text-[10px] font-bold", getTierColor(pRank.tier))}>
+                      {formatTierShort(pRank.tier, pRank.rank)}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-gray-600">-</span>
+                  )}
+                </div>
                 {/* KDA */}
                 <div className="w-16 text-center">
                   <span className="text-xs text-gray-200 font-mono">
@@ -225,7 +277,7 @@ function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatch
                   ))}
                   {/* Trinket */}
                   <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50 ml-1">
-                    {(match.items[6] || 0) > 0 || (p.items[6] || 0) > 0 ? (
+                    {(p.items[6] || 0) > 0 ? (
                       <img
                         crossOrigin="anonymous"
                         src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/item/${p.items[6]}.png`}
@@ -252,6 +304,20 @@ function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatch
       className="overflow-hidden"
     >
       <div className="px-4 py-4 space-y-4 bg-gray-950/80 border-t border-gray-800/50">
+        {/* Average Rank Banner */}
+        {rankData && !rankData.loading && rankData.averageRank !== 'UNRANKED' && (
+          <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg bg-gray-800/50 border border-gray-700/50">
+            <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+            <span className="text-xs text-gray-400">平均段位</span>
+            <span className="text-xs font-bold text-gray-200">{rankData.averageRank}</span>
+          </div>
+        )}
+        {rankData?.loading && (
+          <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg bg-gray-800/50 border border-gray-700/50">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+            <span className="text-xs text-gray-400">加载段位信息...</span>
+          </div>
+        )}
         {renderTeamTable(blueTeam, '蓝队', blueWon)}
         {renderTeamTable(redTeam, '红队', !blueWon)}
       </div>
@@ -260,15 +326,77 @@ function MatchDetailPanel({ match, patch, currentPuuid }: { match: EnrichedMatch
 }
 
 // ── Main MatchHistory Component ──
-export function MatchHistory({ profile }: { profile: SummonerProfileData }) {
+export function MatchHistory({ profile, server }: { profile: SummonerProfileData; server: string }) {
   const latestPatch = profile.latestPatch || '16.13.1';
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
 
+  // Cache: matchId -> rank data
+  const [rankCache, setRankCache] = useState<Record<string, MatchRankData>>({});
+
   // We need the current user's puuid to highlight them in the detail panel
-  // Find it from the first match's allParticipants by matching championName
   const currentPuuid = profile.recentMatches[0]?.allParticipants.find(p =>
     p.playerName === profile.gameName
   )?.puuid;
+
+  // Fetch ranks when expanding a match
+  const fetchRanksForMatch = useCallback(async (match: EnrichedMatchData) => {
+    // Already cached and not loading
+    if (rankCache[match.matchId] && !rankCache[match.matchId].loading) return;
+
+    // Set loading state
+    setRankCache(prev => ({
+      ...prev,
+      [match.matchId]: { ranks: {}, averageRank: '', loading: true },
+    }));
+
+    try {
+      const puuids = match.allParticipants.map(p => p.puuid);
+      const res = await fetch('/api/match-ranks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ puuids, server }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const ranksMap: Record<string, PlayerRankInfo> = {};
+        (data.ranks as PlayerRankInfo[]).forEach(r => {
+          ranksMap[r.puuid] = r;
+        });
+        setRankCache(prev => ({
+          ...prev,
+          [match.matchId]: {
+            ranks: ranksMap,
+            averageRank: data.averageRank || '',
+            loading: false,
+          },
+        }));
+      } else {
+        setRankCache(prev => ({
+          ...prev,
+          [match.matchId]: { ranks: {}, averageRank: '', loading: false },
+        }));
+      }
+    } catch {
+      setRankCache(prev => ({
+        ...prev,
+        [match.matchId]: { ranks: {}, averageRank: '', loading: false },
+      }));
+    }
+  }, [rankCache, server]);
+
+  const handleToggleMatch = useCallback((match: EnrichedMatchData) => {
+    const isCurrentlyExpanded = expandedMatch === match.matchId;
+    if (isCurrentlyExpanded) {
+      setExpandedMatch(null);
+    } else {
+      setExpandedMatch(match.matchId);
+      // Trigger rank fetch if not already cached
+      if (!rankCache[match.matchId]) {
+        fetchRanksForMatch(match);
+      }
+    }
+  }, [expandedMatch, rankCache, fetchRanksForMatch]);
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -317,6 +445,7 @@ export function MatchHistory({ profile }: { profile: SummonerProfileData }) {
             const isExpanded = expandedMatch === match.matchId;
             const kda = formatKDA(match.kills, match.deaths, match.assists);
             const kpPercent = Math.round(match.killParticipation * 100);
+            const matchRankData = rankCache[match.matchId];
 
             return (
               <div
@@ -334,7 +463,7 @@ export function MatchHistory({ profile }: { profile: SummonerProfileData }) {
                     "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
                     match.win ? "hover:bg-blue-900/15" : "hover:bg-red-900/15"
                   )}
-                  onClick={() => setExpandedMatch(isExpanded ? null : match.matchId)}
+                  onClick={() => handleToggleMatch(match)}
                 >
                   {/* Game Type + Time */}
                   <div className="flex flex-col items-start gap-1 min-w-[72px] shrink-0">
@@ -451,8 +580,15 @@ export function MatchHistory({ profile }: { profile: SummonerProfileData }) {
                     </div>
                   </div>
 
-                  {/* Badges: multikill + MVP */}
+                  {/* Badges: avg rank + multikill + MVP */}
                   <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                    {/* Average rank badge (shown after ranks loaded) */}
+                    {matchRankData && !matchRankData.loading && matchRankData.averageRank && matchRankData.averageRank !== 'UNRANKED' && (
+                      <span className="hidden lg:flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-700/40 text-gray-300 border border-gray-600/40">
+                        <Trophy className="w-3 h-3 text-yellow-500" />
+                        {matchRankData.averageRank}
+                      </span>
+                    )}
                     {match.multikill && (
                       <span className={cn(
                         "text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md",
@@ -482,6 +618,7 @@ export function MatchHistory({ profile }: { profile: SummonerProfileData }) {
                       match={match}
                       patch={latestPatch}
                       currentPuuid={currentPuuid}
+                      rankData={matchRankData}
                     />
                   )}
                 </AnimatePresence>

@@ -386,3 +386,87 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     throw error;
   }
 }
+
+// ── Player rank info for match details ──
+export interface PlayerRankInfo {
+  puuid: string;
+  tier: string;
+  rank: string;
+}
+
+// Tier numeric values for averaging
+const TIER_ORDER: Record<string, number> = {
+  'IRON': 0,
+  'BRONZE': 1,
+  'SILVER': 2,
+  'GOLD': 3,
+  'PLATINUM': 4,
+  'EMERALD': 5,
+  'DIAMOND': 6,
+  'MASTER': 7,
+  'GRANDMASTER': 8,
+  'CHALLENGER': 9,
+};
+
+const RANK_ORDER: Record<string, number> = {
+  'IV': 0,
+  'III': 1,
+  'II': 2,
+  'I': 3,
+};
+
+const TIER_NAMES = Object.keys(TIER_ORDER);
+const RANK_NAMES = ['IV', 'III', 'II', 'I'];
+
+/**
+ * Batch-fetch ranked data for a list of puuids.
+ * Calls League V4 in parallel, gracefully handles failures per player.
+ */
+export async function fetchParticipantRanks(puuids: string[], server: string): Promise<PlayerRankInfo[]> {
+  const { platform } = getRouting(server);
+
+  const results = await Promise.all(
+    puuids.map(async (puuid): Promise<PlayerRankInfo> => {
+      try {
+        const leagueUrl = `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`;
+        const leagues: LeagueEntry[] = await fetchRiot(leagueUrl);
+        const soloQueue = leagues.find(l => l.queueType === 'RANKED_SOLO_5x5');
+        const flexQueue = leagues.find(l => l.queueType === 'RANKED_FLEX_SR');
+        const best = soloQueue || flexQueue || leagues[0];
+        return {
+          puuid,
+          tier: best?.tier || 'UNRANKED',
+          rank: best?.rank || '',
+        };
+      } catch {
+        return { puuid, tier: 'UNRANKED', rank: '' };
+      }
+    })
+  );
+
+  return results;
+}
+
+/**
+ * Calculate average rank from a list of PlayerRankInfo.
+ * Returns a string like "Emerald 3" or "UNRANKED".
+ */
+export function calcAverageRank(ranks: PlayerRankInfo[]): string {
+  const ranked = ranks.filter(r => r.tier !== 'UNRANKED' && TIER_ORDER[r.tier] !== undefined);
+  if (ranked.length === 0) return 'UNRANKED';
+
+  const totalScore = ranked.reduce((sum, r) => {
+    const tierVal = (TIER_ORDER[r.tier] || 0) * 4;
+    const rankVal = RANK_ORDER[r.rank] || 0;
+    return sum + tierVal + rankVal;
+  }, 0);
+
+  const avgScore = totalScore / ranked.length;
+  const tierIndex = Math.min(Math.floor(avgScore / 4), TIER_NAMES.length - 1);
+  const rankIndex = Math.min(Math.round(avgScore % 4), 3);
+
+  const tierName = TIER_NAMES[tierIndex];
+  // Master+ tiers don't have ranks
+  if (tierIndex >= 7) return tierName.charAt(0) + tierName.slice(1).toLowerCase();
+  return tierName.charAt(0) + tierName.slice(1).toLowerCase() + ' ' + RANK_NAMES[rankIndex];
+}
