@@ -1118,7 +1118,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           {match.items.slice(0, 6).map((itemId, i) => (
                             <div key={i} className={cn(
                               "w-6 h-6 rounded overflow-hidden",
-                              itemId > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                              itemId > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
                             )}>
                               {itemId > 0 ? (
                                 <img
@@ -1132,7 +1132,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           ))}
                           <div className={cn(
                             "w-6 h-6 rounded-full overflow-hidden ml-0.5 shrink-0",
-                            (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                            (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
                           )}>
                             {(match.items[6] || 0) > 0 ? (
                               <img
@@ -1163,16 +1163,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     </div>
 
                     {/* 6. Arrow button right fixed */}
-                    <div className={cn(
-                      "w-[40px] flex items-end justify-center pb-2 shrink-0 border-l transition-colors",
-                      match.win 
-                        ? "border-blue-900/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400" 
-                        : "border-red-900/20 bg-red-500/5 hover:bg-red-500/10 text-red-400"
-                    )}>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 transition-transform duration-250",
-                        isExpanded && "rotate-180"
-                      )} />
+                    <div className="w-[40px] flex items-center justify-center shrink-0 pr-1">
+                      <div className={cn(
+                        "w-7 h-7 flex items-center justify-center rounded-md border transition-colors",
+                        match.win 
+                          ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20" 
+                          : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                      )}>
+                        <ChevronDown className={cn(
+                          "w-4 h-4 transition-transform duration-250",
+                          isExpanded && "rotate-180"
+                        )} />
+                      </div>
                     </div>
                   </div>
 
@@ -1208,10 +1210,17 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         <span className="text-[10px] text-gray-500">
                           {getRelativeTime(match.gameCreation, t)}
                         </span>
-                        <ChevronDown className={cn(
-                          "w-4 h-4 transition-transform duration-250 ml-1 text-gray-400",
-                          isExpanded && "rotate-180"
-                        )} />
+                        <div className={cn(
+                          "w-6 h-6 flex items-center justify-center rounded border ml-1",
+                          match.win 
+                            ? "border-blue-500/30 bg-blue-500/10 text-blue-400" 
+                            : "border-red-500/30 bg-red-500/10 text-red-400"
+                        )}>
+                          <ChevronDown className={cn(
+                            "w-3.5 h-3.5 transition-transform duration-250",
+                            isExpanded && "rotate-180"
+                          )} />
+                        </div>
                       </div>
                     </div>
 
@@ -1270,7 +1279,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                             {[0, 1, 2, 3, 4, 5].map((i) => (
                               <div key={i} className={cn(
                                 "w-7 h-7 rounded overflow-hidden",
-                                (match.items[i] || 0) > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                                (match.items[i] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
                               )}>
                                 {(match.items[i] || 0) > 0 ? (
                                   <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[i]}.png`} alt="" className="w-full h-full object-cover" />
@@ -1279,7 +1288,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                             ))}
                             <div className={cn(
                               "w-7 h-7 rounded-full overflow-hidden ml-0.5 shrink-0",
-                              (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                              (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
                             )}>
                               {(match.items[6] || 0) > 0 ? (
                                 <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`} alt="" className="w-full h-full object-cover" />

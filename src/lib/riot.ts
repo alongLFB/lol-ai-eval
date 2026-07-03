@@ -195,23 +195,23 @@ export interface SummonerProfileData {
   flexLP: number;
 }
 
-// ── Queue ID to Chinese name mapping ──
+// ── Queue ID to name mapping ──
 function getQueueName(queueId: number): string {
   const map: Record<number, string> = {
-    400: '匹配模式',
-    420: '单排/双排',
-    430: '匹配模式',
-    440: '灵活组排',
-    450: '极地大乱斗',
-    700: '冠军杯赛',
+    400: 'NORMAL',
+    420: 'RANKED_SOLO_5x5',
+    430: 'NORMAL',
+    440: 'RANKED_FLEX_SR',
+    450: 'ARAM',
+    700: 'CLASH',
     900: 'URF',
-    1020: '克隆模式',
-    1300: '突围',
-    1700: '斗魂竞技场',
-    1710: '斗魂竞技场',
+    1020: 'ONE_FOR_ALL',
+    1300: 'NEXUS_BLITZ',
+    1700: 'CHERRY',
+    1710: 'CHERRY',
     1900: 'URF',
   };
-  return map[queueId] || '其他模式';
+  return map[queueId] || 'UNKNOWN';
 }
 
 // ── Multikill label ──
