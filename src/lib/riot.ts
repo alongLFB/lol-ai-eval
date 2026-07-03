@@ -396,8 +396,8 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const flexQueue = leagues.find(l => l.queueType === 'RANKED_FLEX_SR');
     const activeSolo = soloQueue || leagues[0];
 
-    // 4. Get Match IDs (last 20)
-    const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=20`;
+    // 4. Get Match IDs (last 25 to guarantee 20 valid ones)
+    const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=25`;
     const matchIds: string[] = await fetchRiot(matchIdsUrl);
 
     // 5. Get Match Details (enriched)
@@ -465,7 +465,9 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     });
 
     const rawMatches = await Promise.all(matchPromises);
-    const recentMatches = rawMatches.filter((m): m is EnrichedMatchData => m !== null);
+    const recentMatches = rawMatches
+      .filter((m): m is EnrichedMatchData => m !== null)
+      .slice(0, 20);
 
     const wins = activeSolo?.wins || 0;
     const losses = activeSolo?.losses || 0;
@@ -592,4 +594,78 @@ export function calcAverageRank(ranks: PlayerRankInfo[]): string {
   // Master+ tiers don't have ranks
   if (tierIndex >= 7) return tierName.charAt(0) + tierName.slice(1).toLowerCase();
   return tierName.charAt(0) + tierName.slice(1).toLowerCase() + ' ' + RANK_NAMES[rankIndex];
+}
+
+export async function fetchMatchesForPuuid(puuid: string, server: string, start: number, count: number): Promise<EnrichedMatchData[]> {
+  const { region } = getRouting(server);
+  
+  // 1. Get Match IDs
+  const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
+  const matchIds: string[] = await fetchRiot(matchIdsUrl);
+
+  const matchPromises = matchIds.map(async (matchId) => {
+    try {
+      const matchUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+      const matchData: MatchDto = await fetchRiot(matchUrl);
+      const participant = matchData.info.participants.find(p => p.puuid === puuid);
+
+      if (!participant) return null;
+
+      const durationMin = matchData.info.gameDuration / 60;
+      const cs = (participant.totalMinionsKilled || 0) + (participant.neutralMinionsKilled || 0);
+
+      // Calculate team kills for kill participation
+      const teamParticipants = matchData.info.participants.filter(p => p.teamId === participant.teamId);
+      const teamKills = teamParticipants.reduce((sum, p) => sum + p.kills, 0);
+      const killParticipation = teamKills > 0 ? (participant.kills + participant.assists) / teamKills : 0;
+
+      // Calculate MVP
+      const mvpScores = teamParticipants.map(p => ({
+        puuid: p.puuid,
+        score: calcMVPScore(p, teamKills),
+      }));
+      mvpScores.sort((a, b) => b.score - a.score);
+      const isMVP = participant.win && mvpScores[0]?.puuid === participant.puuid;
+
+      // Extract all participants
+      const allParticipants = matchData.info.participants.map(p =>
+        extractParticipant(p, matchData.info.gameDuration)
+      );
+
+      return {
+        matchId,
+        championName: participant.championName,
+        champLevel: participant.champLevel || 1,
+        kills: participant.kills,
+        deaths: participant.deaths,
+        assists: participant.assists,
+        win: participant.win,
+        damage: participant.totalDamageDealtToChampions,
+        gameDuration: matchData.info.gameDuration,
+        gameCreation: matchData.info.gameCreation,
+        queueId: matchData.info.queueId,
+        queueName: getQueueName(matchData.info.queueId),
+        items: [participant.item0, participant.item1, participant.item2, participant.item3, participant.item4, participant.item5, participant.item6],
+        cs,
+        csPerMin: durationMin > 0 ? parseFloat((cs / durationMin).toFixed(1)) : 0,
+        visionScore: participant.visionScore || 0,
+        multikill: getMultikillLabel(participant),
+        killParticipation,
+        summoner1Id: participant.summoner1Id,
+        summoner2Id: participant.summoner2Id,
+        primaryRuneId: participant.perks?.styles?.[0]?.selections?.[0]?.perk || 0,
+        subStyleId: participant.perks?.styles?.[1]?.style || 0,
+        isMVP,
+        allParticipants,
+        goldEarned: participant.goldEarned || 0,
+        teamPosition: participant.teamPosition || '',
+      } as EnrichedMatchData;
+    } catch (e) {
+      console.warn(`Failed to fetch match ${matchId}`, e);
+      return null;
+    }
+  });
+
+  const rawMatches = await Promise.all(matchPromises);
+  return rawMatches.filter((m): m is EnrichedMatchData => m !== null);
 }

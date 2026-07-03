@@ -332,22 +332,74 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   const [showAllTeammates, setShowAllTeammates] = useState(false);
   const [activeTab, setActiveTab] = useState<'ALL' | 'SOLO' | 'FLEX' | 'ARAM'>('ALL');
 
+  // State to manage loaded matches and load-more pagination
+  const [matches, setMatches] = useState<EnrichedMatchData[]>(profile.recentMatches);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(profile.recentMatches.length >= 20);
+
+  const currentProfileId = `${profile.gameName}#${profile.tagLine}`;
+  const [prevProfileId, setPrevProfileId] = useState(currentProfileId);
+
+  // Synchronously reset local matches list when the searched summoner profile changes
+  if (currentProfileId !== prevProfileId) {
+    setMatches(profile.recentMatches);
+    setHasMore(profile.recentMatches.length >= 20);
+    setPrevProfileId(currentProfileId);
+    setExpandedMatch(null);
+  }
+
   const currentPuuid = profile.recentMatches[0]?.allParticipants.find(p =>
     p.playerName === profile.gameName
   )?.puuid;
 
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !currentPuuid) return;
+    setIsLoadingMore(true);
+    try {
+      const res = await fetch('/api/more-matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          puuid: currentPuuid,
+          server,
+          start: matches.length,
+          count: 20,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const newMatches = data.matches as EnrichedMatchData[];
+        if (newMatches && newMatches.length > 0) {
+          setMatches(prev => [...prev, ...newMatches]);
+          if (newMatches.length < 20) {
+            setHasMore(false);
+          }
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        console.error('Failed to load more matches');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
   const filteredMatches = useMemo(() => {
-    return profile.recentMatches.filter(m => {
+    return matches.filter(m => {
       if (activeTab === 'SOLO') return m.queueName === '单排/双排';
       if (activeTab === 'FLEX') return m.queueName === '灵活组排';
       if (activeTab === 'ARAM') return m.queueName === '极地大乱斗';
       return true;
     });
-  }, [profile.recentMatches, activeTab]);
+  }, [matches, activeTab]);
 
   const summaryStats = useMemo(() => {
-    const matches = filteredMatches;
-    const totalGames = matches.length;
+    const list = filteredMatches;
+    const totalGames = list.length;
     if (totalGames === 0) return null;
 
     let wins = 0;
@@ -359,7 +411,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
     const champGroups: Record<string, { wins: number; losses: number; kills: number; deaths: number; assists: number; games: number }> = {};
     const posCounts: Record<string, number> = { TOP: 0, JUNGLE: 0, MIDDLE: 0, BOTTOM: 0, UTILITY: 0 };
 
-    matches.forEach(m => {
+    list.forEach(m => {
       if (m.win) wins++;
       kills += m.kills;
       deaths += m.deaths;
@@ -417,7 +469,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   const teammateStats = useMemo(() => {
     const teammates: Record<string, { playerName: string; playerTag: string; summonerLevel: number; lastChampion: string; wins: number; losses: number; games: number }> = {};
     
-    profile.recentMatches.forEach(m => {
+    matches.forEach(m => {
       const myParticipant = m.allParticipants.find(p => p.puuid === currentPuuid);
       if (!myParticipant) return;
       const myTeamId = myParticipant.teamId;
@@ -457,7 +509,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         if (b.games !== a.games) return b.games - a.games;
         return b.winRate - a.winRate;
       });
-  }, [profile.recentMatches, currentPuuid]);
+  }, [matches, currentPuuid]);
 
   const displayedTeammates = useMemo(() => {
     return showAllTeammates ? teammateStats.slice(0, 10) : teammateStats.slice(0, 5);
@@ -1200,6 +1252,24 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 </div>
               );
             })}
+
+            {/* Load More Matches Button */}
+            {hasMore && (
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="w-full text-center text-xs sm:text-sm font-black py-3 bg-gray-900/60 hover:bg-gray-800/80 border border-gray-850/50 rounded-xl text-blue-400 hover:text-blue-300 transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer shadow-md"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>正在加载更多历史对局...</span>
+                  </>
+                ) : (
+                  <span>展示更多对局 (+20场)</span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
