@@ -7,11 +7,12 @@ import { AIEvaluation } from '@/components/AIEvaluation';
 import { SummonerProfileData } from '@/lib/riot';
 import { toBlob } from 'html-to-image';
 import { Share2, Loader2, Copy, Check, RefreshCw, Clock } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function Home() {
   const t = useTranslations('HomePage');
+  const locale = useLocale();
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function Home() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameName, tagLine, server }),
+        body: JSON.stringify({ gameName, tagLine, server, locale }),
       });
 
       const json = await res.json();
@@ -105,6 +106,7 @@ export default function Home() {
           gameName: currentGameName,
           tagLine: currentTagLine,
           server: currentServer,
+          locale,
           forceRefresh: true,
         }),
       });

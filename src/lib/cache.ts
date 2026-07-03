@@ -17,8 +17,8 @@ export interface CachedSummonerData {
 /**
  * Generate a filesystem-safe cache key from server + Riot ID.
  */
-function getCacheKey(server: string, gameName: string, tagLine: string): string {
-  const normalized = `${server}_${gameName}_${tagLine}`
+function getCacheKey(server: string, gameName: string, tagLine: string, locale: string): string {
+  const normalized = `${server}_${gameName}_${tagLine}_${locale}`
     .toLowerCase()
     .replace(/[^a-z0-9_\-]/g, '_');
   return normalized;
@@ -27,8 +27,8 @@ function getCacheKey(server: string, gameName: string, tagLine: string): string 
 /**
  * Get the file path for a cached summoner entry.
  */
-function getCachePath(server: string, gameName: string, tagLine: string): string {
-  return path.join(CACHE_DIR, `${getCacheKey(server, gameName, tagLine)}.json`);
+function getCachePath(server: string, gameName: string, tagLine: string, locale: string): string {
+  return path.join(CACHE_DIR, `${getCacheKey(server, gameName, tagLine, locale)}.json`);
 }
 
 /**
@@ -47,9 +47,10 @@ function ensureCacheDir(): void {
 export function getCachedData(
   server: string,
   gameName: string,
-  tagLine: string
+  tagLine: string,
+  locale: string
 ): { data: CachedSummonerData; isExpired: boolean } | null {
-  const filePath = getCachePath(server, gameName, tagLine);
+  const filePath = getCachePath(server, gameName, tagLine, locale);
 
   try {
     if (!fs.existsSync(filePath)) return null;
@@ -74,6 +75,7 @@ export function setCachedData(
   server: string,
   gameName: string,
   tagLine: string,
+  locale: string,
   profile: SummonerProfileData,
   evaluation: string
 ): string {
@@ -82,7 +84,7 @@ export function setCachedData(
   const lastUpdated = new Date().toISOString();
   const entry: CachedSummonerData = { profile, evaluation, lastUpdated };
 
-  const filePath = getCachePath(server, gameName, tagLine);
+  const filePath = getCachePath(server, gameName, tagLine, locale);
   fs.writeFileSync(filePath, JSON.stringify(entry), 'utf-8');
 
   return lastUpdated;

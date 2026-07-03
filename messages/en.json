@@ -18,6 +18,9 @@
     "copySuccessTitle": "Copy Successful",
     "copySuccessDesc": "The poster image has been copied to your clipboard!"
   },
+  "AIEvaluation": {
+    "title": "Oracle AI Verdict"
+  },
   "SearchBar": {
     "placeholder": "GameID#TAG (e.g. CatchingTheFire#EUW)",
     "formatError": "Invalid format! Please enter a full ID with '#', e.g. CatchingTheFire#EUW",

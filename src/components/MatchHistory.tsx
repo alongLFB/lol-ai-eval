@@ -5,6 +5,7 @@ import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRank
 import { cn } from '@/lib/utils';
 import { Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 // ── Summoner Spell ID → Data Dragon key mapping ──
 const SUMMONER_SPELL_MAP: Record<number, string> = {
@@ -72,15 +73,15 @@ function getSummonerSpellUrl(spellId: number, patch: string): string {
   return `https://ddragon.leagueoflegends.com/cdn/${patch}/img/spell/${key}.png`;
 }
 
-function getRelativeTime(timestamp: number): string {
+function getRelativeTime(timestamp: number, t: any): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}分钟前`;
+  if (minutes < 60) return t('minutesAgo', { minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}小时前`;
+  if (hours < 24) return t('hoursAgo', { hours });
   const days = Math.floor(hours / 24);
-  return `${days}天前`;
+  return t('daysAgo', { days });
 }
 
 function formatKDA(kills: number, deaths: number, assists: number): string {
@@ -166,6 +167,7 @@ function MatchDetailPanel({
   currentPuuid?: string;
   rankData?: MatchRankData;
 }) {
+  const t = useTranslations('MatchHistory');
   const blueTeam = match.allParticipants.filter(p => p.teamId === 100);
   const redTeam = match.allParticipants.filter(p => p.teamId === 200);
   const blueWon = blueTeam[0]?.win ?? false;
@@ -177,14 +179,14 @@ function MatchDetailPanel({
         "flex items-center justify-between px-4 py-2 rounded-t-lg text-sm font-bold",
         won ? "bg-blue-900/40 text-blue-300" : "bg-red-900/40 text-red-300"
       )}>
-        <span>{won ? '胜利' : '败北'} ({teamLabel})</span>
+        <span>{won ? t('victory') : t('defeat')} ({teamLabel})</span>
         <div className="flex items-center gap-6 text-xs text-gray-400 font-normal font-mono shrink-0">
-          <span className="w-14 text-center shrink-0">段位</span>
+          <span className="w-14 text-center shrink-0">{t('rank')}</span>
           <span className="w-16 text-center shrink-0">KDA</span>
-          <span className="w-16 text-center shrink-0">伤害</span>
+          <span className="w-16 text-center shrink-0">{t('damage')}</span>
           <span className="w-12 text-center shrink-0">CS</span>
-          <span className="w-12 text-center shrink-0">视野</span>
-          <span className="w-[190px] text-center font-sans shrink-0">装备</span>
+          <span className="w-12 text-center shrink-0">{t('vision')}</span>
+          <span className="w-[190px] text-center font-sans shrink-0">{t('items')}</span>
         </div>
       </div>
       <div className={cn(
@@ -326,6 +328,7 @@ function MatchDetailPanel({
 
 // ── Main MatchHistory Component ──
 export function MatchHistory({ profile, server }: { profile: SummonerProfileData; server: string }) {
+  const t = useTranslations('MatchHistory');
   const latestPatch = profile.latestPatch || '16.13.1';
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [rankCache, setRankCache] = useState<Record<string, MatchRankData>>({});
@@ -1146,7 +1149,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       )}
                       
                       <span className="text-[9px] text-gray-500 shrink-0 ml-1">
-                        {getRelativeTime(match.gameCreation)}
+                        {getRelativeTime(match.gameCreation, t)}
                       </span>
                       
                       {/* Premium expand button visual indicator */}
@@ -1189,8 +1192,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         <span className="text-[9px] text-gray-400 font-bold bg-gray-800/50 px-1 py-0.5 rounded leading-none">
                           {match.queueName}
                         </span>
-                        <span className="text-[9px] text-gray-500">
-                          {getRelativeTime(match.gameCreation)}
+                        <span className="font-bold text-gray-200">
+                          {getRelativeTime(match.gameCreation, t)}
                         </span>
                         {/* Down Chevron Box exactly like screenshot */}
                         <div className={cn(

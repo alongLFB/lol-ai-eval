@@ -5,7 +5,7 @@ import { getCachedData, setCachedData } from '@/lib/cache';
 
 export async function POST(req: Request) {
   try {
-    const { gameName, tagLine, server, forceRefresh } = await req.json();
+    const { gameName, tagLine, server, forceRefresh, locale = 'zh' } = await req.json();
 
     if (!gameName || !tagLine || !server) {
       return NextResponse.json(
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     // ── Check cache first (unless force-refreshing) ──
     if (!forceRefresh) {
-      const cached = getCachedData(server, gameName, tagLine);
+      const cached = getCachedData(server, gameName, tagLine, locale);
       if (cached && !cached.isExpired) {
         return NextResponse.json({
           profile: cached.data.profile,
@@ -29,10 +29,10 @@ export async function POST(req: Request) {
 
     // ── Fresh fetch from Riot API + AI ──
     const profile = await fetchSummonerData(gameName, tagLine, server);
-    const evaluation = await generateAIEvaluation(profile);
+    const evaluation = await generateAIEvaluation(profile, locale);
 
     // Write to cache and get timestamp
-    const lastUpdated = setCachedData(server, gameName, tagLine, profile, evaluation);
+    const lastUpdated = setCachedData(server, gameName, tagLine, locale, profile, evaluation);
 
     return NextResponse.json({
       profile,

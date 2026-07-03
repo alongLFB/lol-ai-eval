@@ -18,6 +18,9 @@
     "copySuccessTitle": "复制成功",
     "copySuccessDesc": "大字报图片已存入剪贴板，可直接粘贴分享！"
   },
+  "AIEvaluation": {
+    "title": "神谕 AI 裁决"
+  },
   "SearchBar": {
     "placeholder": "游戏ID#TAG (例如: CatchingTheFire#EUW)",
     "formatError": "格式错误！请输入带有 '#' 的完整 ID，例如 CatchingTheFire#EUW",

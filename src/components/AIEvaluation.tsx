@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, Cpu } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 export function AIEvaluation({ text }: { text: string }) {
+  const t = useTranslations('AIEvaluation');
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   
@@ -42,7 +44,7 @@ export function AIEvaluation({ text }: { text: string }) {
             <Cpu className="w-6 h-6 text-purple-400" />
           </div>
           <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-            水晶枢纽 AI 裁决
+            {t('title')}
           </h3>
           <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse ml-auto" />
         </div>
