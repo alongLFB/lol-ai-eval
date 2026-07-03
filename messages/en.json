@@ -121,10 +121,10 @@
       "BRONZE": "Bronze",
       "IRON": "Iron",
       "UNRANKED": "Unranked"
-    }
+    },
+    "aiAnalyzeMatch": "AI Review Match",
+    "analyzingMatch": "AI is generating review...",
+    "aiReviewTitle": "AI Match Review"
   },
-  "switchLanguage": "Switch to Chinese",
-  "aiAnalyzeMatch": "AI Review Match",
-  "analyzingMatch": "AI is generating review...",
-  "aiReviewTitle": "AI Match Review"
+  "switchLanguage": "Switch to Chinese"
 }
