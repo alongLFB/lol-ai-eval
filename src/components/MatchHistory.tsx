@@ -1008,199 +1008,43 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   {/* ──────────────────────────────────────────────────────── */}
                   <div
                     className={cn(
-                      "hidden sm:flex items-center justify-between gap-3 px-4 py-3 cursor-pointer hover:bg-gray-900/20 transition-all duration-150 select-none"
+                      "hidden sm:flex items-stretch cursor-pointer hover:bg-gray-900/10 transition-all duration-150 select-none",
                     )}
                     onClick={() => handleToggleMatch(match)}
                   >
-                    {/* Game mode + outcome */}
-                    <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
-                      <span className={cn(
-                        "text-[9px] font-bold px-1.5 py-0.5 rounded border leading-tight",
-                        getQueueStyle(match.queueId)
-                      )}>
-                        {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
-                      </span>
-                      <span className={cn(
-                        "text-xs font-bold sm:text-sm",
-                        match.win ? "text-blue-400" : "text-red-400"
-                      )}>
-                        {match.win ? t('victory') : t('defeat')}
-                      </span>
-                      <div className="text-[9px] text-gray-500 leading-none mt-0.5">
-                        {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
-                      </div>
-                    </div>
+                    {/* Left Border color bar */}
+                    <div className={cn(
+                      "w-1.5 shrink-0",
+                      match.win ? "bg-blue-500" : "bg-red-500"
+                    )} />
 
-                    {/* Champion + Spells + Runes */}
-                    <div className="flex items-center gap-1.5 w-[110px] shrink-0">
-                      <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border border-gray-700">
-                        <img
-                          crossOrigin="anonymous"
-                          src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
-                          alt={match.championName}
-                          className="w-full h-full object-cover transform scale-110"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
-                          }}
-                        />
-                        <span className="absolute bottom-0 right-0 text-[8px] bg-black/80 px-0.5 font-bold leading-tight rounded-tl">{match.champLevel}</span>
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-4.5 h-4.5 rounded-sm" />
-                        <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-4.5 h-4.5 rounded-sm" />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <img
-                          crossOrigin="anonymous"
-                          src={getRuneIconUrl(match.primaryRuneId, true)}
-                          alt=""
-                          className="w-4.5 h-4.5 rounded-full bg-gray-900"
-                        />
-                        <img
-                          crossOrigin="anonymous"
-                          src={getRuneIconUrl(match.subStyleId, false)}
-                          alt=""
-                          className="w-4.5 h-4.5 rounded-full bg-gray-900 opacity-70"
-                        />
-                      </div>
-                    </div>
-
-                    {/* KDA block */}
-                    <div className="flex flex-col items-center w-[120px] shrink-0">
-                      <span className="text-gray-100 font-bold text-sm sm:text-base tracking-wider font-mono">
-                        {match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}
-                      </span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex flex-1 items-center gap-3 py-2 pl-3 pr-2 overflow-hidden">
+                      {/* 1. Game mode + outcome (w-[100px]) */}
+                      <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
                         <span className={cn(
-                          "text-[10px] sm:text-xs font-bold",
-                          kda === 'Perfect' ? 'text-yellow-400' :
-                            parseFloat(kda) >= 5 ? 'text-orange-400' :
-                              parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
+                          "text-xs font-bold leading-tight",
+                          getQueueStyle(match.queueId)
                         )}>
-                          {kda} KDA
+                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
                         </span>
-                        <span className="text-[9px] text-gray-500 font-sans">({kpPercent}%)</span>
-                      </div>
-                    </div>
-
-                    {/* CS & Vision */}
-                    <div className="flex flex-col items-center w-[65px] shrink-0">
-                      <span className="text-xs text-gray-300 font-mono">CS {match.cs}</span>
-                      <span className="text-[9px] text-gray-500">{match.csPerMin}/m</span>
-                      <div className="flex items-center gap-0.5 mt-0.5 text-[9px] text-gray-500">
-                        <Eye className="w-2.5 h-2.5" />
-                        <span>{match.visionScore}</span>
-                      </div>
-                    </div>
-
-                    {/* Items row */}
-                    <div className="flex items-center gap-0.5 w-[190px] shrink-0">
-                      {match.items.slice(0, 6).map((itemId, i) => (
-                        <div key={i} className="w-6.5 h-6.5 rounded-sm overflow-hidden bg-gray-800/80 border border-gray-700/50">
-                          {itemId > 0 ? (
-                            <img
-                              crossOrigin="anonymous"
-                              src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${itemId}.png`}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          ) : null}
-                        </div>
-                      ))}
-                      <div className="w-6.5 h-6.5 rounded-full overflow-hidden bg-gray-800/80 border border-gray-700/50 ml-0.5">
-                        {(match.items[6] || 0) > 0 ? (
-                          <img
-                            crossOrigin="anonymous"
-                            src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {/* Badges, Time and Arrow */}
-                    <div className="flex-1 flex items-center justify-end gap-2 shrink-0">
-                      {match.multikill && (
+                        <span className="text-[10px] text-gray-500 mb-0.5">
+                          {getRelativeTime(match.gameCreation, t)}
+                        </span>
+                        <div className="w-6 h-px bg-gray-700 my-0.5"></div>
                         <span className={cn(
-                          "text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm leading-none",
-                          getMultikillStyle(match.multikill)
-                        )}>
-                          {match.multikill === 'Penta Kill' ? t('multikills.Penta Kill') : match.multikill === 'Quadra Kill' ? t('multikills.Quadra Kill') : match.multikill === 'Triple Kill' ? t('multikills.Triple Kill') : match.multikill === 'Double Kill' ? t('multikills.Double Kill') : match.multikill}
-                        </span>
-                      )}
-                      {match.isMVP && (
-                        <span className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 leading-none">
-                          MVP
-                        </span>
-                      )}
-                      
-                      <span className="text-[9px] text-gray-500 shrink-0 ml-1">
-                        {getRelativeTime(match.gameCreation, t)}
-                      </span>
-                      
-                      {/* Premium expand button visual indicator */}
-                      <div className={cn(
-                        "w-7 h-7 flex items-center justify-center rounded-md border transition-colors shrink-0 ml-1",
-                        match.win 
-                          ? "bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/25" 
-                          : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/25"
-                      )}>
-                        <ChevronDown className={cn(
-                          "w-4 h-4 transition-transform duration-250",
-                          isExpanded && "rotate-180"
-                        )} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ──────────────────────────────────────────────────────── */}
-                  {/* 2. MOBILE ONLY NATIVE-LIKE MATCH CARD (below sm)        */}
-                  {/* ──────────────────────────────────────────────────────── */}
-                  <div
-                    className="flex sm:hidden flex-col p-3.5 cursor-pointer select-none"
-                    onClick={() => handleToggleMatch(match)}
-                  >
-                    {/* Top Row: outcome, duration, mode, time, expand chevron */}
-                    <div className="flex items-center justify-between border-b border-gray-800/40 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "text-xs font-black",
+                          "text-xs font-bold mt-0.5",
                           match.win ? "text-blue-400" : "text-red-400"
                         )}>
                           {match.win ? t('victory') : t('defeat')}
                         </span>
-                        <span className="text-[10px] text-gray-500 font-medium">
+                        <div className="text-[10px] text-gray-500 leading-none mt-0.5">
                           {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-gray-400 font-bold bg-gray-800/50 px-1 py-0.5 rounded leading-none">
-                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
-                        </span>
-                        <span className="font-bold text-gray-200">
-                          {getRelativeTime(match.gameCreation, t)}
-                        </span>
-                        {/* Down Chevron Box exactly like screenshot */}
-                        <div className={cn(
-                          "w-6 h-6 flex items-center justify-center rounded border shrink-0",
-                          match.win
-                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                            : "bg-red-500/10 text-red-400 border-red-500/20"
-                        )}>
-                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", isExpanded && "rotate-180")} />
                         </div>
                       </div>
-                    </div>
 
-                    {/* Main Content Area: grid layout with Champion, KDA + Stats, and Item 3x2 grid */}
-                    <div className="grid grid-cols-12 gap-3 mt-3 items-center">
-                      
-                      {/* Left: Champ, Spells & Runes (col-span-4) */}
-                      <div className="col-span-4 flex items-center gap-2 shrink-0">
-                        {/* Champ Icon */}
-                        <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-gray-700 shrink-0">
+                      {/* 2. Champion + Spells + Runes (w-[100px]) */}
+                      <div className="flex items-center gap-1 w-[100px] shrink-0">
+                        <div className="relative w-11 h-11 rounded-full overflow-hidden border border-gray-700 shrink-0">
                           <img
                             crossOrigin="anonymous"
                             src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
@@ -1210,39 +1054,72 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                               (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
                             }}
                           />
-                          <span className="absolute bottom-0 right-0 text-[8px] bg-black/80 px-0.5 font-bold leading-tight rounded-tl">{match.champLevel}</span>
+                          <span className="absolute bottom-0 right-0 text-[9px] bg-gray-900 text-gray-200 w-4 h-4 flex items-center justify-center rounded-full font-bold border border-gray-700 scale-90 origin-bottom-right">
+                            {match.champLevel}
+                          </span>
                         </div>
-                        {/* Spells & Runes stack */}
-                        <div className="flex gap-1 shrink-0">
-                          <div className="flex flex-col gap-0.5">
-                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-4 h-4 rounded-sm" />
-                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-4 h-4 rounded-sm" />
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <img crossOrigin="anonymous" src={getRuneIconUrl(match.primaryRuneId, true)} alt="" className="w-4 h-4 rounded-full bg-gray-900" />
-                            <img crossOrigin="anonymous" src={getRuneIconUrl(match.subStyleId, false)} alt="" className="w-4 h-4 rounded-full bg-gray-900 opacity-60" />
-                          </div>
+                        <div className="flex flex-col gap-0.5 ml-0.5 shrink-0">
+                          <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
+                          <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
                         </div>
-                      </div>
-
-                      {/* Center: KDA & Stats details (col-span-4) */}
-                      <div className="col-span-4 flex flex-col justify-center min-w-0">
-                        <div className="text-xs font-bold text-gray-100 font-mono truncate">
-                          {match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}
-                        </div>
-                        <div className="text-[10px] text-gray-400 font-bold font-mono mt-0.5">
-                          {kda}:1 <span className="text-[8px] text-gray-500 font-normal">KDA</span>
-                        </div>
-                        <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
-                          CS {match.cs} | KP {kpPercent}%
+                        <div className="flex flex-col gap-0.5 shrink-0">
+                          <img
+                            crossOrigin="anonymous"
+                            src={getRuneIconUrl(match.primaryRuneId, true)}
+                            alt=""
+                            className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800"
+                          />
+                          <img
+                            crossOrigin="anonymous"
+                            src={getRuneIconUrl(match.subStyleId, false)}
+                            alt=""
+                            className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800 p-0.5 opacity-80"
+                          />
                         </div>
                       </div>
 
-                      {/* Right: Items 3x2 Grid (col-span-4) */}
-                      <div className="col-span-4 flex items-center gap-1 justify-end shrink-0">
-                        <div className="grid grid-cols-3 gap-0.5 shrink-0">
+                      {/* 3. KDA block (w-[100px]) */}
+                      <div className="flex flex-col items-start w-[100px] shrink-0">
+                        <span className="text-gray-100 font-bold text-sm tracking-wider font-mono truncate w-full">
+                          {match.kills} <span className="text-gray-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-gray-500 font-normal">/</span> {match.assists}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={cn(
+                            "text-[10px] font-medium font-mono",
+                            kda === 'Perfect' ? 'text-yellow-400' :
+                              parseFloat(kda) >= 5 ? 'text-orange-400' :
+                                parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
+                          )}>
+                            {kda}:1 KDA
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 4. Stats: P/Kill, CS, Rank (w-[100px]) */}
+                      <div className="flex flex-col items-start justify-center w-[100px] border-l border-gray-800/60 pl-3 shrink-0">
+                        <span className="text-[10px] text-gray-400 truncate w-full">
+                          P/Kill <span className="text-gray-200 font-bold">{kpPercent}%</span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 truncate w-full">
+                          CS {match.cs} ({match.csPerMin})
+                        </span>
+                        {currentPuuid && matchRankData && matchRankData.ranks[currentPuuid] && matchRankData.ranks[currentPuuid].tier !== 'UNRANKED' && (
+                          <div className="flex items-center gap-1 mt-1 truncate w-full">
+                            <Trophy className={cn("w-2.5 h-2.5 shrink-0", getTierColor(matchRankData.ranks[currentPuuid].tier))} />
+                            <span className="text-[10px] text-gray-300 font-medium truncate">{getTierChineseName(matchRankData.ranks[currentPuuid].tier, t)} {matchRankData.ranks[currentPuuid].rank}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 5. Items row & Badges (flex-1 flex overflow-hidden) */}
+                      <div className="flex-1 flex items-center justify-start gap-2 overflow-x-auto scrollbar-hide shrink-0 min-w-[200px]">
+                        {/* Items */}
+                        <div className="flex items-center gap-0.5 shrink-0">
                           {match.items.slice(0, 6).map((itemId, i) => (
-                            <div key={i} className="w-4.5 h-4.5 rounded-sm overflow-hidden bg-gray-800 border border-gray-700/50">
+                            <div key={i} className={cn(
+                              "w-6 h-6 rounded overflow-hidden",
+                              itemId > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                            )}>
                               {itemId > 0 ? (
                                 <img
                                   crossOrigin="anonymous"
@@ -1253,10 +1130,10 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                               ) : null}
                             </div>
                           ))}
-                        </div>
-                        {/* Trinket & Badge (MVP) */}
-                        <div className="flex flex-col gap-1 items-center shrink-0">
-                          <div className="w-4.5 h-4.5 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50">
+                          <div className={cn(
+                            "w-6 h-6 rounded-full overflow-hidden ml-0.5 shrink-0",
+                            (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                          )}>
                             {(match.items[6] || 0) > 0 ? (
                               <img
                                 crossOrigin="anonymous"
@@ -1266,8 +1143,17 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                               />
                             ) : null}
                           </div>
+                        </div>
+
+                        {/* Badges Flowing Right */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {match.multikill && (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white leading-none shadow-sm shrink-0 whitespace-nowrap flex items-center h-4.5">
+                              {match.multikill === 'Penta Kill' ? t('multikills.Penta Kill') : match.multikill === 'Quadra Kill' ? t('multikills.Quadra Kill') : match.multikill === 'Triple Kill' ? t('multikills.Triple Kill') : match.multikill === 'Double Kill' ? t('multikills.Double Kill') : match.multikill}
+                            </span>
+                          )}
                           {match.isMVP && (
-                            <span className="text-[7px] font-black px-1 py-0 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 transform scale-90 leading-none">
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-yellow-600 text-white leading-none shadow-sm shrink-0 whitespace-nowrap flex items-center h-4.5">
                               MVP
                             </span>
                           )}
@@ -1275,8 +1161,148 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       </div>
 
                     </div>
+
+                    {/* 6. Arrow button right fixed */}
+                    <div className={cn(
+                      "w-[40px] flex items-end justify-center pb-2 shrink-0 border-l transition-colors",
+                      match.win 
+                        ? "border-blue-900/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400" 
+                        : "border-red-900/20 bg-red-500/5 hover:bg-red-500/10 text-red-400"
+                    )}>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 transition-transform duration-250",
+                        isExpanded && "rotate-180"
+                      )} />
+                    </div>
                   </div>
 
+                  {/* ──────────────────────────────────────────────────────── */}
+                  {/* 2. MOBILE ONLY NATIVE-LIKE MATCH CARD (below sm)        */}
+                  {/* ──────────────────────────────────────────────────────── */}
+                  <div
+                    className="flex sm:hidden flex-col cursor-pointer select-none"
+                    onClick={() => handleToggleMatch(match)}
+                  >
+                    {/* Top Bar (OPGG style) */}
+                    <div className={cn(
+                      "flex items-center justify-between px-3 py-1.5 border-b",
+                      match.win 
+                        ? "bg-blue-900/20 border-blue-900/30" 
+                        : "bg-red-900/20 border-red-900/30"
+                    )}>
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "text-xs font-bold",
+                          match.win ? "text-blue-400" : "text-red-400"
+                        )}>
+                          {match.win ? t('victory') : t('defeat')}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
+                        </span>
+                        <span className="text-[10px] text-gray-500">
+                          {getRelativeTime(match.gameCreation, t)}
+                        </span>
+                        <ChevronDown className={cn(
+                          "w-4 h-4 transition-transform duration-250 ml-1 text-gray-400",
+                          isExpanded && "rotate-180"
+                        )} />
+                      </div>
+                    </div>
+
+                    {/* Mobile Content Grid */}
+                    <div className="flex flex-col px-3 py-2 gap-2">
+                      <div className="flex items-center justify-between">
+                        {/* Avatar block */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-gray-700 shrink-0">
+                            <img
+                              crossOrigin="anonymous"
+                              src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
+                              alt={match.championName}
+                              className="w-full h-full object-cover transform scale-110"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
+                              }}
+                            />
+                            <span className="absolute bottom-0 right-0 text-[9px] bg-gray-900 text-gray-200 w-4.5 h-4.5 flex items-center justify-center rounded-full font-bold border border-gray-700 origin-bottom-right">
+                              {match.champLevel}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-0.5 shrink-0">
+                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
+                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
+                          </div>
+                          <div className="flex flex-col gap-0.5 shrink-0">
+                            <img crossOrigin="anonymous" src={getRuneIconUrl(match.primaryRuneId, true)} alt="" className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800" />
+                            <img crossOrigin="anonymous" src={getRuneIconUrl(match.subStyleId, false)} alt="" className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800 p-0.5 opacity-80" />
+                          </div>
+                        </div>
+
+                        {/* KDA & Stats block combined */}
+                        <div className="flex flex-col items-end text-right justify-center shrink-0">
+                          <span className="text-gray-100 font-bold text-[13px] tracking-wider font-mono">
+                            {match.kills} <span className="text-gray-500 font-normal">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-gray-500 font-normal">/</span> {match.assists}
+                          </span>
+                          <span className={cn(
+                            "text-[10px] font-medium font-mono mt-0.5",
+                            kda === 'Perfect' ? 'text-yellow-400' :
+                              parseFloat(kda) >= 5 ? 'text-orange-400' :
+                                parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
+                          )}>
+                            {kda}:1 KDA
+                          </span>
+                          <span className="text-[10px] text-gray-400 mt-0.5">
+                            KP {kpPercent}% • CS {match.cs}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Items & Badges */}
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-1 shrink-0 overflow-x-auto scrollbar-hide">
+                          <div className="flex gap-0.5 shrink-0">
+                            {[0, 1, 2, 3, 4, 5].map((i) => (
+                              <div key={i} className={cn(
+                                "w-7 h-7 rounded overflow-hidden",
+                                (match.items[i] || 0) > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                              )}>
+                                {(match.items[i] || 0) > 0 ? (
+                                  <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[i]}.png`} alt="" className="w-full h-full object-cover" />
+                                ) : null}
+                              </div>
+                            ))}
+                            <div className={cn(
+                              "w-7 h-7 rounded-full overflow-hidden ml-0.5 shrink-0",
+                              (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-gray-800/30 border border-gray-700/30"
+                            )}>
+                              {(match.items[6] || 0) > 0 ? (
+                                <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`} alt="" className="w-full h-full object-cover" />
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1 items-end shrink-0 ml-2">
+                           {match.multikill && (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white leading-none shadow-sm whitespace-nowrap">
+                              {match.multikill === 'Penta Kill' ? t('multikills.Penta Kill') : match.multikill === 'Quadra Kill' ? t('multikills.Quadra Kill') : match.multikill === 'Triple Kill' ? t('multikills.Triple Kill') : match.multikill === 'Double Kill' ? t('multikills.Double Kill') : match.multikill}
+                            </span>
+                          )}
+                          {match.isMVP && (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-yellow-600 text-white leading-none shadow-sm whitespace-nowrap">
+                              MVP
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   {/* Expanded Detail Panel */}
                   <AnimatePresence>
                     {isExpanded && (
