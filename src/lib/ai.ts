@@ -116,29 +116,51 @@ export async function generateSingleMatchEvaluation(match: any, locale: string =
   const resultText = match.win ? (locale === 'en' ? 'Victory' : '胜利') : (locale === 'en' ? 'Defeat' : '失败');
 
   const promptZh = `你是一个极其毒舌又极具洞察力的《英雄联盟》顶级赛事教练。
-请根据以下这场单局游戏的数据，用极具网感、幽默感、包含LOL圈内梗的语言，进行一段单局赛后复盘。
-要求指出：
-1. 亮点（如果有）
-2. 拉跨/失误点
-3. 下一步改进建议
+请根据以下这场单局游戏的数据，进行一段单局赛后复盘。
+请务必严格按照以下格式和要求输出，不要省略或增加模块，每一条都必须包含具体的分析，最好带有一些幽默或锐评：
+
+🎯 做得好的地方
+1. [亮点1]
+2. [亮点2]
+3. [亮点3]
+
+⚠️ 做得不好的地方
+1. [拉跨/失误点1]
+2. [拉跨/失误点2]
+3. [拉跨/失误点3]
+
+✅ 需要改进的内容 (最有效的3条)
+1. [改进建议1]
+2. [改进建议2]
+3. [改进建议3]
 
 玩家本局数据：
 - 英雄：${match.championName}
 - 结果：${resultText}
 - K/D/A：${match.kills} / ${match.deaths} / ${match.assists} (KDA: ${kda})
 - 补刀：${match.cs}
-- 伤害/经济等：暂缺详细数据，基于已有数据点评。
 - 多杀：${match.multikill || '无'}
 - MVP/SVP: ${match.isMVP ? '是' : '否'}
-
-请直接输出点评（字数100-200字即可），情绪要饱满，切中要害！`;
+`;
 
   const promptEn = `You are an extremely sarcastic yet insightful top-tier League of Legends coach.
-Based on the data of this single match, provide a post-match review in English, packed with internet slang and LoL memes.
-Please point out:
-1. Highlights (if any)
-2. Terrible mistakes / weak points
-3. Suggestions for improvement
+Based on the data of this single match, provide a post-match review.
+You MUST strictly follow this format and include exactly 3 points per section. Keep it humorous and roasting where appropriate:
+
+🎯 Highlights
+1. [Highlight 1]
+2. [Highlight 2]
+3. [Highlight 3]
+
+⚠️ Weaknesses
+1. [Mistake 1]
+2. [Mistake 2]
+3. [Mistake 3]
+
+✅ Actionable Advice (Top 3)
+1. [Advice 1]
+2. [Advice 2]
+3. [Advice 3]
 
 Match Data:
 - Champion: ${match.championName}
@@ -147,8 +169,7 @@ Match Data:
 - Creep Score: ${match.cs}
 - Multikill: ${match.multikill || 'None'}
 - MVP/SVP: ${match.isMVP ? 'Yes' : 'No'}
-
-Please output ONLY your review (100-200 words). Be emotional, direct, and hit the nail on the head!`;
+`;
 
   const prompt = locale === 'en' ? promptEn : promptZh;
 
@@ -156,9 +177,35 @@ Please output ONLY your review (100-200 words). Be emotional, direct, and hit th
   if (!process.env.AI_API_KEY) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     if (locale === 'en') {
-      return `Alright, let's look at this ${match.championName} ${resultText} masterclass. With a ${kda} KDA, I can already tell your monitor was probably turned off half the time. ${match.isMVP ? 'Sure, you got MVP, but let\'s be real, you were the tallest dwarf.' : 'Not even MVP? No surprise there.'} Next time, try hitting your skillshots and actually looking at the minimap. Recommendation: Uninstall or play Yuumi.`;
+      return `🎯 Highlights
+1. You managed to actually pick a champion and load into the game.
+2. Your ${match.championName} is somewhat recognizable on the minimap.
+3. You didn't AFK, which is a low bar but you cleared it.
+
+⚠️ Weaknesses
+1. With a ${kda} KDA, I assume your monitor was turned off.
+2. ${match.isMVP ? 'You got MVP, but only because your team was even worse.' : 'You were basically a walking gold mine for the enemy.'}
+3. Your CS of ${match.cs} makes me think you were playing a pacifist run.
+
+✅ Actionable Advice (Top 3)
+1. Next time, try hitting your skillshots.
+2. Remember that the minimap exists in the bottom right corner.
+3. Consider playing Yuumi if you want to play with one hand.`;
     } else {
-      return `来来来，咱们看看这场 ${match.championName} 的${resultText}局。就凭你这 ${kda} 的 KDA，我合理怀疑你这把是一边吃泡面一边用脚操作的。${match.isMVP ? '虽然混了个MVP，但也就是矮子里拔高个罢了吧。' : '连个MVP都没混到，纯纯的峡谷提款机。'} 你的亮点在于成功地让对面中单提前超神了。建议：下次出门记得带眼，或者干脆把键盘捐给有需要的人！`;
+      return `🎯 做得好的地方
+1. 你成功选到了 ${match.championName} 并且连上了游戏。
+2. 你的头像在小地图上偶尔还是能被队友观察到的。
+3. 居然没有挂机，这在你的水平里已经算是奇迹了。
+
+⚠️ 做得不好的地方
+1. 就凭你这 ${kda} 的 KDA，我怀疑你是一边吃泡面一边用脚操作的。
+2. ${match.isMVP ? '虽然混了个MVP，但也就是矮子里拔高个。' : '连个MVP都没混到，纯纯的峡谷提款机。'}
+3. 你这 ${match.cs} 的补刀，不知道的还以为你是个辅助呢。
+
+✅ 需要改进的内容 (最有效的3条)
+1. 下次出门记得带眼，或者干脆把键盘捐给有需要的人。
+2. 建议去训练营多练练补刀，把显示器打开再玩。
+3. 如果实在不行，建议转型玩悠米，起码能少送点。`;
     }
   }
 
@@ -171,7 +218,7 @@ Please output ONLY your review (100-200 words). Be emotional, direct, and hit th
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
-      max_completion_tokens: 300,
+      max_completion_tokens: 800,
     });
 
     const fallbackContent = locale === 'en' ? "Failed to analyze match." : "无法生成本局复盘。";
