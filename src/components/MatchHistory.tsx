@@ -1008,7 +1008,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   {/* ──────────────────────────────────────────────────────── */}
                   <div
                     className={cn(
-                      "hidden sm:flex items-stretch cursor-pointer hover:bg-gray-900/10 transition-all duration-150 select-none",
+                      "hidden md:flex items-stretch min-h-[96px] cursor-pointer hover:bg-gray-900/10 transition-all duration-150 select-none",
                     )}
                     onClick={() => handleToggleMatch(match)}
                   >
@@ -1018,7 +1018,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       match.win ? "bg-blue-500" : "bg-red-500"
                     )} />
 
-                    <div className="flex flex-1 items-center gap-3 py-2 pl-3 pr-2 overflow-hidden">
+                    <div className="flex flex-1 items-center gap-3 py-3 pl-3 pr-2 overflow-hidden min-h-[96px]">
                       {/* 1. Game mode + outcome (w-[100px]) */}
                       <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
                         <span className={cn(
@@ -1112,7 +1112,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       </div>
 
                       {/* 5. Items row & Badges (flex-1 flex overflow-hidden) */}
-                      <div className="flex-1 flex items-center justify-start gap-2 overflow-x-auto scrollbar-hide shrink-0 min-w-[200px]">
+                      <div className="flex-1 flex items-center justify-start gap-2 overflow-hidden shrink-0 min-w-[200px]">
                         {/* Items */}
                         <div className="flex items-center gap-0.5 shrink-0">
                           {match.items.slice(0, 6).map((itemId, i) => (
@@ -1135,18 +1135,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                             (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
                           )}>
                             {(match.items[6] || 0) > 0 ? (
-                              <img
-                                crossOrigin="anonymous"
-                                src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
+                                <img
+                                  crossOrigin="anonymous"
+                                  src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
                             ) : null}
                           </div>
                         </div>
 
                         {/* Badges Flowing Right */}
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex flex-1 flex-wrap items-center content-center gap-1 py-1 h-full">
                           {match.multikill && (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white leading-none shadow-sm shrink-0 whitespace-nowrap flex items-center h-4.5">
                               {match.multikill === 'Penta Kill' ? t('multikills.Penta Kill') : match.multikill === 'Quadra Kill' ? t('multikills.Quadra Kill') : match.multikill === 'Triple Kill' ? t('multikills.Triple Kill') : match.multikill === 'Double Kill' ? t('multikills.Double Kill') : match.multikill}
@@ -1182,7 +1182,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   {/* 2. MOBILE ONLY NATIVE-LIKE MATCH CARD (below sm)        */}
                   {/* ──────────────────────────────────────────────────────── */}
                   <div
-                    className="flex sm:hidden flex-col cursor-pointer select-none"
+                    className="flex md:hidden flex-col cursor-pointer select-none"
                     onClick={() => handleToggleMatch(match)}
                   >
                     {/* Top Bar (OPGG style) */}
