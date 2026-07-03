@@ -762,11 +762,13 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               <span className="text-[10px] text-gray-500 font-bold">{teammateStats.length} 个队友</span>
             </div>
 
-            <div className="divide-y divide-gray-800/60 max-h-[480px] overflow-y-auto pr-1">
+            <div className="divide-y divide-gray-800/40 max-h-[480px] overflow-y-auto pr-1">
               {displayedTeammates.map((t) => (
                 <div key={`${t.playerName}#${t.playerTag}`} className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="relative w-8 h-8 rounded-md overflow-hidden bg-gray-800 border border-gray-700/60 shrink-0">
+                  
+                  {/* Left: Champion Avatar (Circle) & Player Name / Level Info */}
+                  <div className="flex items-center gap-2.5 min-w-0 w-[50%]">
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-800 border border-gray-700/60 shrink-0">
                       <img
                         crossOrigin="anonymous"
                         src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${t.lastChampion}.png`}
@@ -778,36 +780,40 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[145px]" title={`${t.playerName}#${t.playerTag}`}>
-                        {t.playerName} <span className="text-[9px] text-gray-500">#{t.playerTag}</span>
+                      <div className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[130px]" title={`${t.playerName}#${t.playerTag}`}>
+                        {t.playerName} <span className="text-[9px] text-gray-500 font-normal">#{t.playerTag}</span>
                       </div>
                       <div className="text-[9px] text-gray-500 mt-0.5">等级 {t.summonerLevel}</div>
                     </div>
                   </div>
 
-                  <div className="text-right shrink-0 px-2 font-mono">
+                  {/* Middle: Wins / Losses & Total Games (Left-aligned relative to column) */}
+                  <div className="w-[30%] shrink-0 text-left pl-3">
                     <div className="text-xs font-medium text-gray-300">
-                      <span className="text-blue-400 font-bold">{t.wins}胜</span> / <span className="text-red-400 font-bold">{t.losses}败</span>
+                      <span className="text-blue-400 font-bold">{t.wins}胜</span>
+                      <span className="text-gray-600 px-0.5"> / </span>
+                      <span className="text-red-400 font-bold">{t.losses}败</span>
                     </div>
-                    <div className="text-[9px] text-gray-500 mt-0.5">{t.games} 场对局</div>
+                    <div className="text-[9px] text-gray-500 mt-0.5">{t.games} 比赛</div>
                   </div>
 
-                  <div className="shrink-0 text-right min-w-[45px]">
+                  {/* Right: Win Rate Percentage (Right-aligned text, no background badge) */}
+                  <div className="w-[20%] shrink-0 text-right font-mono text-xs font-bold">
                     <span className={cn(
-                      "text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md",
-                      t.winRate >= 70 ? "bg-red-950/40 text-red-400 border border-red-900/30" :
-                        t.winRate >= 50 ? "bg-blue-950/40 text-blue-400 border border-blue-900/30" :
-                          "bg-gray-800 text-gray-400"
+                      t.winRate >= 70 ? "text-red-400" :
+                        t.winRate >= 50 ? "text-gray-200" :
+                          "text-gray-400"
                     )}>
                       {t.winRate}%
                     </span>
                   </div>
+
                 </div>
               ))}
 
               {teammateStats.length === 0 && (
                 <div className="text-xs text-gray-500 text-center py-8">
-                  最近 10 场对局中没有同队合作过 2 次及以上的队友
+                  最近 20 场对局中没有同队合作过 2 次及以上的队友
                 </div>
               )}
             </div>
