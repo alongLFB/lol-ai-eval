@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRankInfo } from '@/lib/riot';
 import { cn } from '@/lib/utils';
 import { Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users } from 'lucide-react';
@@ -467,7 +467,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   }, [filteredMatches]);
 
   const teammateStats = useMemo(() => {
-    const teammates: Record<string, { playerName: string; playerTag: string; summonerLevel: number; lastChampion: string; wins: number; losses: number; games: number }> = {};
+    const teammates: Record<string, { puuid: string; playerName: string; playerTag: string; summonerLevel: number; lastChampion: string; wins: number; losses: number; games: number }> = {};
     
     matches.forEach(m => {
       const myParticipant = m.allParticipants.find(p => p.puuid === currentPuuid);
@@ -480,6 +480,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         const key = `${p.playerName}#${p.playerTag}`;
         if (!teammates[key]) {
           teammates[key] = {
+            puuid: p.puuid,
             playerName: p.playerName,
             playerTag: p.playerTag,
             summonerLevel: p.summonerLevel,
@@ -510,6 +511,44 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         return b.winRate - a.winRate;
       });
   }, [matches, currentPuuid]);
+
+  // ── Lazy-load profile icons for teammates ──
+  const [teammateIcons, setTeammateIcons] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (teammateStats.length === 0) return;
+
+    const puuids = teammateStats.map(t => t.puuid).filter(Boolean);
+    if (puuids.length === 0) return;
+
+    // Only fetch icons we don't already have
+    const missingPuuids = puuids.filter(p => teammateIcons[p] === undefined);
+    if (missingPuuids.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/summoner-icons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ puuids: missingPuuids, server }),
+        });
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          const iconMap: Record<string, number> = {};
+          (data.icons as { puuid: string; profileIconId: number }[]).forEach(i => {
+            iconMap[i.puuid] = i.profileIconId;
+          });
+          setTeammateIcons(prev => ({ ...prev, ...iconMap }));
+        }
+      } catch (err) {
+        console.warn('Failed to fetch teammate icons:', err);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teammateStats, server]);
 
   const displayedTeammates = useMemo(() => {
     return showAllTeammates ? teammateStats.slice(0, 10) : teammateStats.slice(0, 5);
@@ -766,16 +805,20 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               {displayedTeammates.map((t) => (
                 <div key={`${t.playerName}#${t.playerTag}`} className="flex items-center justify-between py-2.5">
                   
-                  {/* Left: Champion Avatar (Circle) & Player Name / Level Info */}
+                  {/* Left: Player Profile Avatar (Circle) & Player Name / Level Info */}
                   <div className="flex items-center gap-2.5 min-w-0 w-[50%]">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-800 border border-gray-700/60 shrink-0">
                       <img
                         crossOrigin="anonymous"
-                        src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${t.lastChampion}.png`}
-                        alt={t.lastChampion}
+                        src={
+                          teammateIcons[t.puuid]
+                            ? `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/${teammateIcons[t.puuid]}.png`
+                            : `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/1.png`
+                        }
+                        alt={t.playerName}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
+                          (e.target as HTMLImageElement).src = `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/1.png`;
                         }}
                       />
                     </div>

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { fetchSummonerData } from '@/lib/riot';
 import { generateAIEvaluation } from '@/lib/ai';
+import { getCachedData, setCachedData } from '@/lib/cache';
 
 export async function POST(req: Request) {
   try {
-    const { gameName, tagLine, server } = await req.json();
+    const { gameName, tagLine, server, forceRefresh } = await req.json();
 
     if (!gameName || !tagLine || !server) {
       return NextResponse.json(
@@ -13,22 +14,36 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Fetch Riot Data
-    const profile = await fetchSummonerData(gameName, tagLine, server);
+    // ── Check cache first (unless force-refreshing) ──
+    if (!forceRefresh) {
+      const cached = getCachedData(server, gameName, tagLine);
+      if (cached && !cached.isExpired) {
+        return NextResponse.json({
+          profile: cached.data.profile,
+          evaluation: cached.data.evaluation,
+          lastUpdated: cached.data.lastUpdated,
+          fromCache: true,
+        });
+      }
+    }
 
-    // 2. Generate AI Evaluation
+    // ── Fresh fetch from Riot API + AI ──
+    const profile = await fetchSummonerData(gameName, tagLine, server);
     const evaluation = await generateAIEvaluation(profile);
 
-    // 3. Return Combined Data
+    // Write to cache and get timestamp
+    const lastUpdated = setCachedData(server, gameName, tagLine, profile, evaluation);
+
     return NextResponse.json({
       profile,
       evaluation,
+      lastUpdated,
+      fromCache: false,
     });
 
   } catch (error: any) {
     console.error('API /api/analyze Error:', error);
     
-    // Determine if it's a known error type
     const message = error.message || '服务器内部错误，似乎是虚空入侵了！';
     const status = error.message?.includes('limit exceeded') ? 429 : 
                    error.message?.includes('not found') ? 404 : 500;

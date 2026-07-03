@@ -1,12 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { MatchHistory } from '@/components/MatchHistory';
 import { AIEvaluation } from '@/components/AIEvaluation';
 import { SummonerProfileData } from '@/lib/riot';
 import { toBlob } from 'html-to-image';
-import { Share2, Loader2, Copy, Check } from 'lucide-react';
+import { Share2, Loader2, Copy, Check, RefreshCw, Clock } from 'lucide-react';
+
+/**
+ * Format an ISO timestamp into a human-readable relative time string (Chinese).
+ */
+function getRelativeUpdateTime(isoTimestamp: string): string {
+  const diff = Date.now() - new Date(isoTimestamp).getTime();
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return '刚刚更新';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} 分钟前更新`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前更新`;
+  const days = Math.floor(hours / 24);
+  return `${days} 天前更新`;
+}
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +35,32 @@ export default function Home() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentServer, setCurrentServer] = useState('EUW');
 
+  // Cache / refresh state
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [relativeTime, setRelativeTime] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentGameName, setCurrentGameName] = useState('');
+  const [currentTagLine, setCurrentTagLine] = useState('');
+
+  // Tick the relative time display every 30 seconds
+  useEffect(() => {
+    if (!lastUpdated) return;
+    setRelativeTime(getRelativeUpdateTime(lastUpdated));
+
+    const interval = setInterval(() => {
+      setRelativeTime(getRelativeUpdateTime(lastUpdated));
+    }, 30_000);
+
+    return () => clearInterval(interval);
+  }, [lastUpdated]);
+
   const handleSearch = async (gameName: string, tagLine: string, server: string) => {
     setIsLoading(true);
     setError(null);
     setData(null);
     setCurrentServer(server);
+    setCurrentGameName(gameName);
+    setCurrentTagLine(tagLine);
 
     try {
       const res = await fetch('/api/analyze', {
@@ -39,13 +75,46 @@ export default function Home() {
         throw new Error(json.error || '获取数据失败');
       }
 
-      setData(json);
+      setData({ profile: json.profile, evaluation: json.evaluation });
+      setLastUpdated(json.lastUpdated || new Date().toISOString());
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing || !currentGameName || !currentTagLine) return;
+    setIsRefreshing(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameName: currentGameName,
+          tagLine: currentTagLine,
+          server: currentServer,
+          forceRefresh: true,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || '更新失败');
+      }
+
+      setData({ profile: json.profile, evaluation: json.evaluation });
+      setLastUpdated(json.lastUpdated || new Date().toISOString());
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing, currentGameName, currentTagLine, currentServer]);
 
   const handleShare = async () => {
     const el = document.getElementById('share-container');
@@ -150,8 +219,28 @@ export default function Home() {
 
         {data && (
           <div className="mt-16 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Share & Copy action buttons */}
-            <div className="flex justify-center md:justify-end gap-3">
+            {/* Action Bar: Update timer + Update button + Copy + Share */}
+            <div className="flex flex-wrap justify-center md:justify-end items-center gap-3">
+              
+              {/* Last Updated Time Badge */}
+              {lastUpdated && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-900/80 rounded-full border border-gray-800 text-gray-400 text-xs font-medium select-none">
+                  <Clock className="w-3.5 h-3.5 text-gray-500" />
+                  <span>{relativeTime}</span>
+                </div>
+              )}
+
+              {/* Refresh / Update Button */}
+              <button 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-200 rounded-full font-bold shadow-lg transition-all border border-gray-800 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? '正在更新...' : '更新战绩'}
+              </button>
+
+              {/* Copy Image Button */}
               <button 
                 onClick={handleCopyImage}
                 disabled={isCopying}
@@ -161,6 +250,7 @@ export default function Home() {
                 {isCopying ? '正在生成...' : copySuccess ? '已复制到剪贴板！' : '复制大字报图片'}
               </button>
 
+              {/* Share / Download Button */}
               <button 
                 onClick={handleShare}
                 disabled={isSharing}
