@@ -33,5 +33,79 @@
       "KR": "Korea",
       "TW": "Taiwan"
     }
+  },
+  "MatchHistory": {
+    "victory": "Victory",
+    "defeat": "Defeat",
+    "rank": "Rank",
+    "damage": "Damage",
+    "vision": "Vision",
+    "items": "Items",
+    "averageRank": "Avg Rank",
+    "loadingRanks": "Loading Ranks...",
+    "recentlyPlayed": "Recently Played",
+    "frequentTeammates": "Frequent Teammates (2+ Matches)",
+    "teammatesCount": "{count} Teammates",
+    "matches": "Matches",
+    "matchCount": "{count}M",
+    "matchCountLong": "{count} Matches",
+    "overview": "Recent Matches (Last {count})",
+    "winRate": "Win Rate",
+    "winsLosses": "{wins}W {losses}L ({winRate}% WR)",
+    "winsLossesShort": "{wins}W / {losses}L",
+    "totalGames": "{count} Games",
+    "expandTeammates": "Show Top 10 Teammates",
+    "collapseTeammates": "Collapse Teammates",
+    "killParticipation": "Kill Participation {rate}%",
+    "recentChampions": "Most Played Champions",
+    "preferredPositions": "Preferred Roles",
+    "positions": {
+      "TOP": "Top",
+      "JUNGLE": "Jng",
+      "MIDDLE": "Mid",
+      "BOTTOM": "Bot",
+      "UTILITY": "Sup"
+    },
+    "tabs": {
+      "ALL": "All",
+      "SOLO": "Ranked Solo",
+      "FLEX": "Ranked Flex",
+      "ARAM": "ARAM"
+    },
+    "rankedSectionTitle": "Ranked Stats",
+    "rankedSolo": "Ranked Solo",
+    "rankedFlex": "Ranked Flex",
+    "timeFormat": "{minutes}m {seconds}s",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "mvp": "MVP",
+    "queues": {
+      "RANKED_SOLO_5x5": "Ranked Solo",
+      "RANKED_FLEX_SR": "Ranked Flex",
+      "ARAM": "ARAM",
+      "CHERRY": "Arena",
+      "NORMAL": "Normal",
+      "UNKNOWN": "Unknown"
+    },
+    "multikills": {
+      "Penta Kill": "Penta Kill",
+      "Quadra Kill": "Quadra Kill",
+      "Triple Kill": "Triple Kill",
+      "Double Kill": "Double Kill"
+    },
+    "tiers": {
+      "CHALLENGER": "Challenger",
+      "GRANDMASTER": "Grandmaster",
+      "MASTER": "Master",
+      "DIAMOND": "Diamond",
+      "EMERALD": "Emerald",
+      "PLATINUM": "Platinum",
+      "GOLD": "Gold",
+      "SILVER": "Silver",
+      "BRONZE": "Bronze",
+      "IRON": "Iron",
+      "UNRANKED": "Unranked"
+    }
   }
 }

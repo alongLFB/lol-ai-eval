@@ -231,9 +231,14 @@ function calcMVPScore(p: ParticipantDto, teamKills: number): number {
 
 // ── Server routing ──
 function getRouting(server: string) {
-  if (server === 'EUW') return { region: 'europe', platform: 'euw1' };
-  if (server === 'ME') return { region: 'europe', platform: 'me1' };
-  return { region: 'europe', platform: 'euw1' };
+  switch (server.toUpperCase()) {
+    case 'EUW': return { region: 'europe', platform: 'euw1' };
+    case 'ME': return { region: 'europe', platform: 'me1' };
+    case 'NA': return { region: 'americas', platform: 'na1' };
+    case 'KR': return { region: 'asia', platform: 'kr' };
+    case 'TW': return { region: 'asia', platform: 'tw2' };
+    default: return { region: 'europe', platform: 'euw1' };
+  }
 }
 
 const fetchRiot = async (url: string) => {

@@ -89,13 +89,13 @@ function formatKDA(kills: number, deaths: number, assists: number): string {
   return ((kills + assists) / deaths).toFixed(2);
 }
 
-function getQueueStyle(queueName: string) {
-  switch (queueName) {
-    case '单排/双排':
+function getQueueStyle(queueId: number) {
+  switch (queueId) {
+    case 420:
       return 'text-yellow-400 border-yellow-500/40 bg-yellow-500/10';
-    case '灵活组排':
+    case 440:
       return 'text-purple-400 border-purple-500/40 bg-purple-500/10';
-    case '极地大乱斗':
+    case 450:
       return 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10';
     default:
       return 'text-gray-400 border-gray-500/40 bg-gray-500/10';
@@ -104,10 +104,10 @@ function getQueueStyle(queueName: string) {
 
 function getMultikillStyle(multikill: string) {
   switch (multikill) {
-    case '五杀': return 'bg-red-500 text-white shadow-red-500/50';
-    case '四杀': return 'bg-orange-500 text-white shadow-orange-500/50';
-    case '三杀': return 'bg-purple-500 text-white shadow-purple-500/50';
-    case '双杀': return 'bg-blue-500 text-white shadow-blue-500/50';
+    case 'Penta Kill': return 'bg-red-500 text-white shadow-red-500/50';
+    case 'Quadra Kill': return 'bg-orange-500 text-white shadow-orange-500/50';
+    case 'Triple Kill': return 'bg-purple-500 text-white shadow-purple-500/50';
+    case 'Double Kill': return 'bg-blue-500 text-white shadow-blue-500/50';
     default: return 'bg-gray-500 text-white';
   }
 }
@@ -128,21 +128,8 @@ function getTierColor(tier: string): string {
   }
 }
 
-function getTierChineseName(tier: string): string {
-  const map: Record<string, string> = {
-    'CHALLENGER': '最强王者',
-    'GRANDMASTER': '傲世宗师',
-    'MASTER': '超凡大师',
-    'DIAMOND': '璀璨钻石',
-    'EMERALD': '流光翡翠',
-    'PLATINUM': '华贵铂金',
-    'GOLD': '荣耀黄金',
-    'SILVER': '不屈白银',
-    'BRONZE': '英勇黄铜',
-    'IRON': '坚韧黑铁',
-    'UNRANKED': '无段位',
-  };
-  return map[tier.toUpperCase()] || '无段位';
+function getTierChineseName(tier: string, t: any): string {
+  return t(`tiers.${tier.toUpperCase()}`) || t('tiers.UNRANKED');
 }
 
 function formatTierShort(tier: string, rank: string): string {
@@ -256,7 +243,7 @@ function MatchDetailPanel({
                 </div>
                 <div className="w-12 text-center shrink-0">
                   <div className="text-xs text-gray-300 font-mono">{p.cs}</div>
-                  <div className="text-[10px] text-gray-550 font-mono">{p.csPerMin}/分</div>
+                  <div className="text-[10px] text-gray-550 font-mono">{p.csPerMin}/m</div>
                 </div>
                 <div className="w-12 text-center text-xs text-gray-400 font-mono shrink-0">
                   {p.visionScore}
@@ -305,14 +292,14 @@ function MatchDetailPanel({
         {rankData && !rankData.loading && rankData.averageRank !== 'UNRANKED' && (
           <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg bg-gray-800/50 border border-gray-700/50 max-w-sm mx-auto">
             <Trophy className="w-3.5 h-3.5 text-yellow-500" />
-            <span className="text-xs text-gray-400">平均段位</span>
+            <span className="text-xs text-gray-400">{t('averageRank')}</span>
             <span className="text-xs font-bold text-gray-200">{rankData.averageRank}</span>
           </div>
         )}
         {rankData?.loading && (
           <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg bg-gray-800/50 border border-gray-700/50 max-w-xs mx-auto">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
-            <span className="text-xs text-gray-400">加载段位信息...</span>
+            <span className="text-xs text-gray-400">{t('loadingRanks')}</span>
           </div>
         )}
         <div className="w-full overflow-x-auto select-none pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
@@ -393,9 +380,9 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
   const filteredMatches = useMemo(() => {
     return matches.filter(m => {
-      if (activeTab === 'SOLO') return m.queueName === '单排/双排';
-      if (activeTab === 'FLEX') return m.queueName === '灵活组排';
-      if (activeTab === 'ARAM') return m.queueName === '极地大乱斗';
+      if (activeTab === 'SOLO') return m.queueId === 420;
+      if (activeTab === 'FLEX') return m.queueId === 440;
+      if (activeTab === 'ARAM') return m.queueId === 450;
       return true;
     });
   }, [matches, activeTab]);
@@ -494,21 +481,21 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
           };
         }
         
-        const t = teammates[key];
-        t.games++;
-        if (m.win) t.wins++;
-        else t.losses++;
-        t.summonerLevel = Math.max(t.summonerLevel, p.summonerLevel);
-        t.lastChampion = p.championName;
+        const tm = teammates[key];
+        tm.games++;
+        if (m.win) tm.wins++;
+        else tm.losses++;
+        tm.summonerLevel = Math.max(tm.summonerLevel, p.summonerLevel);
+        tm.lastChampion = p.championName;
       });
     });
 
     return Object.values(teammates)
-      .map(t => ({
-        ...t,
-        winRate: Math.round((t.wins / t.games) * 100)
+      .map(tm => ({
+        ...tm,
+        winRate: Math.round((tm.wins / tm.games) * 100)
       }))
-      .filter(t => t.games >= 2)
+      .filter(tm => tm.games >= 2)
       .sort((a, b) => {
         if (b.games !== a.games) return b.games - a.games;
         return b.winRate - a.winRate;
@@ -521,7 +508,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   useEffect(() => {
     if (teammateStats.length === 0) return;
 
-    const puuids = teammateStats.map(t => t.puuid).filter(Boolean);
+    const puuids = teammateStats.map(tm => tm.puuid).filter(Boolean);
     if (puuids.length === 0) return;
 
     // Only fetch icons we don't already have
@@ -652,7 +639,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
           {profile.ladderRank && profile.ladderPercent !== 'N/A' && (
             <div className="mt-2 text-xs text-gray-400 font-medium flex items-center justify-center md:justify-start gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse mr-1"></span>
-              <span>{server.toUpperCase()} | 阶梯排名 <span className="text-blue-400 font-bold">{profile.ladderRank}</span> ({profile.ladderPercent} 占前几名)</span>
+              <span>{server.toUpperCase()} | 阶梯排名 <span className="text-blue-400 font-bold">{profile.ladderRank}</span> ({profile.ladderPercent} Top %)</span>
             </div>
           )}
         </div>
@@ -662,7 +649,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
       <div className="block xl:hidden bg-gray-900/70 border border-gray-800 rounded-xl p-4 shadow-lg backdrop-blur-sm space-y-4">
         <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
           <Trophy className="w-4 h-4 text-yellow-500" />
-          <h4 className="text-sm font-bold text-gray-200">排位赛段位</h4>
+          <h4 className="text-sm font-bold text-gray-200">{t('rankedSectionTitle')}</h4>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -674,12 +661,12 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
             <div className="min-w-0">
               <div className="text-[10px] text-gray-500 font-bold">单双排位</div>
               <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
-                <span>{getTierChineseName(profile.tier)} {profile.rank}</span>
+                <span>{getTierChineseName(profile.tier, t)} {profile.rank}</span>
                 {profile.leaguePoints > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.leaguePoints} LP)</span>}
               </div>
               {profile.tier !== 'UNRANKED' ? (
                 <div className="text-[10px] text-gray-450 mt-0.5">
-                  {profile.wins}胜 {profile.losses}负 ({profile.winRate}% 胜率)
+                  {t('winsLosses', { wins: profile.wins, losses: profile.losses, winRate: profile.winRate })}
                 </div>
               ) : (
                 <div className="text-[10px] text-gray-500 mt-0.5">暂无单双排位战绩</div>
@@ -693,14 +680,14 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               <Trophy className={cn("w-6 h-6", getTierColor(profile.flexTier))} />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] text-gray-500 font-bold">灵活组排</div>
+              <div className="text-[10px] text-gray-500 font-bold">{t('rankedFlex')}</div>
               <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
-                <span>{getTierChineseName(profile.flexTier)} {profile.flexRank}</span>
+                <span>{getTierChineseName(profile.flexTier, t)} {profile.flexRank}</span>
                 {profile.flexLP > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.flexLP} LP)</span>}
               </div>
               {profile.flexTier !== 'UNRANKED' ? (
                 <div className="text-[10px] text-gray-450 mt-0.5">
-                  {profile.flexWins}胜 {profile.flexLosses}负 ({Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100)}% 胜率)
+                  {t('winsLosses', { wins: profile.flexWins, losses: profile.flexLosses, winRate: Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100) })}
                 </div>
               ) : (
                 <div className="text-[10px] text-gray-500 mt-0.5">暂无灵活排位战绩</div>
@@ -713,10 +700,10 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
       {/* ── Game Mode Tab Filters ── */}
       <div className="flex border-b border-gray-800 gap-1 overflow-x-auto pb-px">
         {[
-          { id: 'ALL', label: '全部' },
-          { id: 'SOLO', label: '单双排位' },
-          { id: 'FLEX', label: '灵活排位' },
-          { id: 'ARAM', label: '极地大乱斗' },
+          { id: 'ALL', label: t('tabs.ALL') },
+          { id: 'SOLO', label: t('tabs.SOLO') },
+          { id: 'FLEX', label: t('tabs.FLEX') },
+          { id: 'ARAM', label: t('tabs.ARAM') },
         ].map(tab => (
           <button
             key={tab.id}
@@ -746,7 +733,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
           <div className="hidden xl:block bg-gray-900/70 border border-gray-800 rounded-xl p-4 shadow-lg backdrop-blur-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
               <Trophy className="w-4 h-4 text-yellow-500" />
-              <h4 className="text-sm font-bold text-gray-200">排位赛段位</h4>
+              <h4 className="text-sm font-bold text-gray-200">{t('rankedSectionTitle')}</h4>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
@@ -758,12 +745,12 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 <div className="min-w-0">
                   <div className="text-[10px] text-gray-500 font-bold">单双排位</div>
                   <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
-                    <span>{getTierChineseName(profile.tier)} {profile.rank}</span>
+                    <span>{getTierChineseName(profile.tier, t)} {profile.rank}</span>
                     {profile.leaguePoints > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.leaguePoints} LP)</span>}
                   </div>
                   {profile.tier !== 'UNRANKED' ? (
                     <div className="text-[10px] text-gray-450 mt-0.5">
-                      {profile.wins}胜 {profile.losses}负 ({profile.winRate}% 胜率)
+                      {t('winsLosses', { wins: profile.wins, losses: profile.losses, winRate: profile.winRate })}
                     </div>
                   ) : (
                     <div className="text-[10px] text-gray-500 mt-0.5">暂无单双排位战绩</div>
@@ -777,14 +764,14 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   <Trophy className={cn("w-6 h-6", getTierColor(profile.flexTier))} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] text-gray-500 font-bold">灵活组排</div>
+                  <div className="text-[10px] text-gray-500 font-bold">{t('rankedFlex')}</div>
                   <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
-                    <span>{getTierChineseName(profile.flexTier)} {profile.flexRank}</span>
+                    <span>{getTierChineseName(profile.flexTier, t)} {profile.flexRank}</span>
                     {profile.flexLP > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.flexLP} LP)</span>}
                   </div>
                   {profile.flexTier !== 'UNRANKED' ? (
                     <div className="text-[10px] text-gray-450 mt-0.5">
-                      {profile.flexWins}胜 {profile.flexLosses}负 ({Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100)}% 胜率)
+                      {t('winsLosses', { wins: profile.flexWins, losses: profile.flexLosses, winRate: Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100) })}
                     </div>
                   ) : (
                     <div className="text-[10px] text-gray-500 mt-0.5">暂无灵活排位战绩</div>
@@ -801,12 +788,12 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 <Users className="w-4 h-4 text-purple-400" />
                 经常同队 (合作 2 次及以上)
               </h4>
-              <span className="text-[10px] text-gray-500 font-bold">{teammateStats.length} 个队友</span>
+              <span className="text-[10px] text-gray-500 font-bold">{t('teammatesCount', { count: teammateStats.length })}</span>
             </div>
 
             <div className="divide-y divide-gray-800/40 max-h-[480px] overflow-y-auto pr-1">
-              {displayedTeammates.map((t) => (
-                <div key={`${t.playerName}#${t.playerTag}`} className="flex items-center justify-between py-2.5">
+              {displayedTeammates.map((tm) => (
+                <div key={`${tm.playerName}#${tm.playerTag}`} className="flex items-center justify-between py-2.5">
                   
                   {/* Left: Player Profile Avatar (Circle) & Player Name / Level Info */}
                   <div className="flex items-center gap-2.5 min-w-0 w-[50%]">
@@ -814,11 +801,11 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       <img
                         crossOrigin="anonymous"
                         src={
-                          teammateIcons[t.puuid]
-                            ? `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/${teammateIcons[t.puuid]}.png`
+                          teammateIcons[tm.puuid]
+                            ? `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/${teammateIcons[tm.puuid]}.png`
                             : `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/1.png`
                         }
-                        alt={t.playerName}
+                        alt={tm.playerName}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/1.png`;
@@ -826,31 +813,31 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[130px]" title={`${t.playerName}#${t.playerTag}`}>
-                        {t.playerName} <span className="text-[9px] text-gray-500 font-normal">#{t.playerTag}</span>
+                      <div className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[130px]" title={`${tm.playerName}#${tm.playerTag}`}>
+                        {tm.playerName} <span className="text-[9px] text-gray-500 font-normal">#{tm.playerTag}</span>
                       </div>
-                      <div className="text-[9px] text-gray-500 mt-0.5">等级 {t.summonerLevel}</div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">等级 {tm.summonerLevel}</div>
                     </div>
                   </div>
 
                   {/* Middle: Wins / Losses & Total Games (Left-aligned relative to column) */}
                   <div className="w-[30%] shrink-0 text-left pl-3">
                     <div className="text-xs font-medium text-gray-300">
-                      <span className="text-blue-400 font-bold">{t.wins}胜</span>
+                      <span className="text-blue-400 font-bold">{tm.wins}W</span>
                       <span className="text-gray-600 px-0.5"> / </span>
-                      <span className="text-red-400 font-bold">{t.losses}败</span>
+                      <span className="text-red-400 font-bold">{tm.losses}败</span>
                     </div>
-                    <div className="text-[9px] text-gray-500 mt-0.5">{t.games} 比赛</div>
+                    <div className="text-[9px] text-gray-500 mt-0.5">{t('totalGames', { count: tm.games })}</div>
                   </div>
 
                   {/* Right: Win Rate Percentage (Right-aligned text, no background badge) */}
                   <div className="w-[20%] shrink-0 text-right font-mono text-xs font-bold">
                     <span className={cn(
-                      t.winRate >= 70 ? "text-red-400" :
-                        t.winRate >= 50 ? "text-gray-200" :
+                      tm.winRate >= 70 ? "text-red-400" :
+                        tm.winRate >= 50 ? "text-gray-200" :
                           "text-gray-400"
                     )}>
-                      {t.winRate}%
+                      {tm.winRate}%
                     </span>
                   </div>
 
@@ -869,7 +856,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 onClick={() => setShowAllTeammates(!showAllTeammates)}
                 className="w-full text-center text-xs font-bold py-2 bg-gray-800/40 hover:bg-gray-800/80 border border-gray-800/50 rounded-lg text-purple-400 hover:text-purple-300 transition-colors flex items-center justify-center gap-1 mt-2"
               >
-                <span>{showAllTeammates ? '折叠' : '展开前10个队友'}</span>
+                <span>{showAllTeammates ? t('collapseTeammates') : t('expandTeammates')}</span>
                 <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showAllTeammates && "rotate-180")} />
               </button>
             )}
@@ -910,9 +897,9 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400 font-bold">{summaryStats.totalGames}场比赛</div>
+                  <div className="text-xs text-gray-400 font-bold">{t('matchCountLong', { count: summaryStats.totalGames })}</div>
                   <div className="text-xs text-gray-300 mt-0.5 whitespace-nowrap">
-                    <span className="text-blue-400 font-bold">{summaryStats.wins}胜</span> / <span className="text-red-400 font-bold">{summaryStats.losses}败</span>
+                    <span className="text-blue-400 font-bold">{summaryStats.wins}W</span> / <span className="text-red-400 font-bold">{summaryStats.losses}败</span>
                   </div>
                 </div>
               </div>
@@ -933,7 +920,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
               {/* Top 3 Played Champions */}
               <div className="flex flex-col gap-1.5 justify-center">
-                <div className="text-[10px] text-gray-400 font-bold border-b border-gray-800 pb-1">最近高频英雄</div>
+                <div className="text-[10px] text-gray-400 font-bold border-b border-gray-800 pb-1">{t('recentChampions')}</div>
                 <div className="space-y-1.5">
                   {summaryStats.topChamps.map((c) => (
                     <div key={c.name} className="flex items-center justify-between text-[11px] gap-2">
@@ -966,10 +953,10 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
               {/* Preferred Roles Chart */}
               <div className="flex flex-col gap-1.5 justify-center items-center sm:items-start">
-                <div className="text-[10px] text-gray-400 font-bold border-b border-gray-800 pb-1 w-full text-center sm:text-left">常用位置</div>
+                <div className="text-[10px] text-gray-400 font-bold border-b border-gray-800 pb-1 w-full text-center sm:text-left">{t('preferredPositions')}</div>
                 <div className="flex items-end justify-center sm:justify-start gap-2 h-10 w-full">
                   {Object.entries({
-                    TOP: '上', JUNGLE: '打', MIDDLE: '中', BOTTOM: '下', UTILITY: '辅'
+                    TOP: t('positions.TOP'), JUNGLE: t('positions.JUNGLE'), MIDDLE: t('positions.MIDDLE'), BOTTOM: t('positions.BOTTOM'), UTILITY: t('positions.UTILITY')
                   }).map(([roleKey, label]) => {
                     const count = summaryStats.posCounts[roleKey] || 0;
                     const percent = summaryStats.totalGames > 0 ? (count / summaryStats.totalGames) * 100 : 0;
@@ -1029,18 +1016,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     <div className="flex flex-col items-start gap-0.5 min-w-[70px] shrink-0">
                       <span className={cn(
                         "text-[9px] font-bold px-1.5 py-0.5 rounded border leading-tight",
-                        getQueueStyle(match.queueName)
+                        getQueueStyle(match.queueId)
                       )}>
-                        {match.queueName}
+                        {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueName === '斗魂竞技场' ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
                       </span>
                       <span className={cn(
                         "text-xs font-bold sm:text-sm",
                         match.win ? "text-blue-400" : "text-red-400"
                       )}>
-                        {match.win ? '胜利' : '失败'}
+                        {match.win ? t('victory') : '失败'}
                       </span>
                       <div className="text-[9px] text-gray-500 leading-none mt-0.5">
-                        {Math.floor(match.gameDuration / 60)}分{(match.gameDuration % 60).toString().padStart(2, '0')}秒
+                        {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
                       </div>
                     </div>
 
@@ -1099,7 +1086,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     {/* CS & Vision */}
                     <div className="flex flex-col items-center min-w-[55px] shrink-0">
                       <span className="text-xs text-gray-300 font-mono">CS {match.cs}</span>
-                      <span className="text-[9px] text-gray-500">{match.csPerMin}/分</span>
+                      <span className="text-[9px] text-gray-500">{match.csPerMin}/m</span>
                       <div className="flex items-center gap-0.5 mt-0.5 text-[9px] text-gray-500">
                         <Eye className="w-2.5 h-2.5" />
                         <span>{match.visionScore}</span>
@@ -1139,7 +1126,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           "text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm leading-none",
                           getMultikillStyle(match.multikill)
                         )}>
-                          {match.multikill}
+                          {match.multikill === '五杀' ? t('multikills.Penta Kill') : match.multikill === '四杀' ? t('multikills.Quadra Kill') : match.multikill === '三杀' ? t('multikills.Triple Kill') : match.multikill === '双杀' ? t('multikills.Double Kill') : match.multikill}
                         </span>
                       )}
                       {match.isMVP && (
@@ -1181,16 +1168,16 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           "text-xs font-black",
                           match.win ? "text-blue-400" : "text-red-400"
                         )}>
-                          {match.win ? '胜利' : '败北'}
+                          {match.win ? t('victory') : t('defeat')}
                         </span>
                         <span className="text-[10px] text-gray-500 font-medium">
-                          {Math.floor(match.gameDuration / 60)}分{(match.gameDuration % 60).toString().padStart(2, '0')}秒
+                          {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2">
                         <span className="text-[9px] text-gray-400 font-bold bg-gray-800/50 px-1 py-0.5 rounded leading-none">
-                          {match.queueName}
+                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueName === '斗魂竞技场' ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
                         </span>
                         <span className="font-bold text-gray-200">
                           {getRelativeTime(match.gameCreation, t)}
