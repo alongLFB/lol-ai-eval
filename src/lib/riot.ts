@@ -30,6 +30,52 @@ export interface LeagueEntry {
   hotStreak: boolean;
 }
 
+export interface ParticipantDto {
+  puuid: string;
+  championName: string;
+  champLevel: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  win: boolean;
+  item0: number;
+  item1: number;
+  item2: number;
+  item3: number;
+  item4: number;
+  item5: number;
+  item6: number;
+  totalDamageDealtToChampions: number;
+  totalDamageTaken: number;
+  goldEarned: number;
+  totalMinionsKilled: number;
+  neutralMinionsKilled: number;
+  visionScore: number;
+  wardsPlaced: number;
+  wardsKilled: number;
+  doubleKills: number;
+  tripleKills: number;
+  quadraKills: number;
+  pentaKills: number;
+  summoner1Id: number;
+  summoner2Id: number;
+  teamId: number;
+  riotIdGameName: string;
+  riotIdTagline: string;
+  perks: {
+    statPerks: {
+      defense: number;
+      flex: number;
+      offense: number;
+    };
+    styles: {
+      description: string;
+      selections: { perk: number; var1: number; var2: number; var3: number }[];
+      style: number;
+    }[];
+  };
+}
+
 export interface MatchDto {
   metadata: {
     matchId: string;
@@ -45,38 +91,80 @@ export interface MatchDto {
     gameType: string;
     gameVersion: string;
     mapId: number;
+    queueId: number;
     participants: ParticipantDto[];
   };
 }
 
-export interface ParticipantDto {
+// Enriched participant data for detail view
+export interface EnrichedParticipant {
   puuid: string;
   championName: string;
+  champLevel: number;
   kills: number;
   deaths: number;
   assists: number;
   win: boolean;
-  item0: number;
-  item1: number;
-  item2: number;
-  item3: number;
-  item4: number;
-  item5: number;
-  item6: number;
+  items: number[];
   totalDamageDealtToChampions: number;
+  totalDamageTaken: number;
   goldEarned: number;
+  cs: number;
+  csPerMin: number;
+  visionScore: number;
+  wardsPlaced: number;
+  wardsKilled: number;
+  summoner1Id: number;
+  summoner2Id: number;
+  teamId: number;
+  playerName: string;
+  playerTag: string;
+  primaryRuneId: number;
+  subStyleId: number;
 }
 
-export interface CleanedMatchData {
+// Full enriched match data
+export interface EnrichedMatchData {
   matchId: string;
   championName: string;
+  champLevel: number;
   kills: number;
   deaths: number;
   assists: number;
   win: boolean;
   damage: number;
   gameDuration: number;
+  gameCreation: number;
+  // Queue / game type
+  queueId: number;
+  queueName: string;
+  // Items
+  items: number[];
+  // CS
+  cs: number;
+  csPerMin: number;
+  // Vision
+  visionScore: number;
+  // Multikills
+  multikill: string | null;
+  // Kill participation
+  killParticipation: number;
+  // Summoner spells
+  summoner1Id: number;
+  summoner2Id: number;
+  // Runes
+  primaryRuneId: number;
+  subStyleId: number;
+  // MVP
+  isMVP: boolean;
+  // All participants for detail view
+  allParticipants: EnrichedParticipant[];
+  // Gold
+  goldEarned: number;
 }
+
+// Keep the old type as an alias for backward compat
+export type CleanedMatchData = EnrichedMatchData;
 
 export interface SummonerProfileData {
   gameName: string;
@@ -88,16 +176,48 @@ export interface SummonerProfileData {
   wins: number;
   losses: number;
   winRate: string;
-  recentMatches: CleanedMatchData[];
+  recentMatches: EnrichedMatchData[];
   latestPatch: string;
 }
 
+// ── Queue ID to Chinese name mapping ──
+function getQueueName(queueId: number): string {
+  const map: Record<number, string> = {
+    400: '匹配模式',
+    420: '单排/双排',
+    430: '匹配模式',
+    440: '灵活组排',
+    450: '极地大乱斗',
+    700: '冠军杯赛',
+    900: 'URF',
+    1020: '克隆模式',
+    1300: '突围',
+    1700: '斗魂竞技场',
+    1710: '斗魂竞技场',
+    1900: 'URF',
+  };
+  return map[queueId] || '其他模式';
+}
+
+// ── Multikill label ──
+function getMultikillLabel(p: ParticipantDto): string | null {
+  if (p.pentaKills > 0) return '五杀';
+  if (p.quadraKills > 0) return '四杀';
+  if (p.tripleKills > 0) return '三杀';
+  if (p.doubleKills > 0) return '双杀';
+  return null;
+}
+
+// ── Simple MVP score ──
+function calcMVPScore(p: ParticipantDto, teamKills: number): number {
+  const kp = teamKills > 0 ? (p.kills + p.assists) / teamKills : 0;
+  return (p.kills * 3 + p.assists * 2) / Math.max(p.deaths, 1) + kp * 10;
+}
+
+// ── Server routing ──
 function getRouting(server: string) {
-  // Map selected server to Riot API routing values
   if (server === 'EUW') return { region: 'europe', platform: 'euw1' };
   if (server === 'ME') return { region: 'europe', platform: 'me1' };
-  
-  // Default fallback
   return { region: 'europe', platform: 'euw1' };
 }
 
@@ -118,6 +238,37 @@ const fetchRiot = async (url: string) => {
 
   return res.json();
 };
+
+// ── Extract enriched participant data ──
+function extractParticipant(p: ParticipantDto, gameDuration: number): EnrichedParticipant {
+  const durationMin = gameDuration / 60;
+  const cs = (p.totalMinionsKilled || 0) + (p.neutralMinionsKilled || 0);
+  return {
+    puuid: p.puuid,
+    championName: p.championName,
+    champLevel: p.champLevel || 1,
+    kills: p.kills,
+    deaths: p.deaths,
+    assists: p.assists,
+    win: p.win,
+    items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6],
+    totalDamageDealtToChampions: p.totalDamageDealtToChampions || 0,
+    totalDamageTaken: p.totalDamageTaken || 0,
+    goldEarned: p.goldEarned || 0,
+    cs,
+    csPerMin: durationMin > 0 ? parseFloat((cs / durationMin).toFixed(1)) : 0,
+    visionScore: p.visionScore || 0,
+    wardsPlaced: p.wardsPlaced || 0,
+    wardsKilled: p.wardsKilled || 0,
+    summoner1Id: p.summoner1Id,
+    summoner2Id: p.summoner2Id,
+    teamId: p.teamId,
+    playerName: p.riotIdGameName || '',
+    playerTag: p.riotIdTagline || '',
+    primaryRuneId: p.perks?.styles?.[0]?.selections?.[0]?.perk || 0,
+    subStyleId: p.perks?.styles?.[1]?.style || 0,
+  };
+}
 
 export async function fetchSummonerData(gameName: string, tagLine: string, server: string): Promise<SummonerProfileData> {
   const { region, platform } = getRouting(server);
@@ -140,25 +291,63 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=10`;
     const matchIds: string[] = await fetchRiot(matchIdsUrl);
 
-    // 5. Get Match Details
+    // 5. Get Match Details (enriched)
     const matchPromises = matchIds.map(async (matchId) => {
       try {
         const matchUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
         const matchData: MatchDto = await fetchRiot(matchUrl);
         const participant = matchData.info.participants.find(p => p.puuid === account.puuid);
-        
+
         if (!participant) return null;
+
+        const durationMin = matchData.info.gameDuration / 60;
+        const cs = (participant.totalMinionsKilled || 0) + (participant.neutralMinionsKilled || 0);
+
+        // Calculate team kills for kill participation
+        const teamParticipants = matchData.info.participants.filter(p => p.teamId === participant.teamId);
+        const teamKills = teamParticipants.reduce((sum, p) => sum + p.kills, 0);
+        const killParticipation = teamKills > 0 ? (participant.kills + participant.assists) / teamKills : 0;
+
+        // Calculate MVP (highest score on winning team, or highest on own team)
+        const mvpScores = teamParticipants.map(p => ({
+          puuid: p.puuid,
+          score: calcMVPScore(p, teamKills),
+        }));
+        mvpScores.sort((a, b) => b.score - a.score);
+        const isMVP = participant.win && mvpScores[0]?.puuid === participant.puuid;
+
+        // Extract all participants for detail view
+        const allParticipants = matchData.info.participants.map(p =>
+          extractParticipant(p, matchData.info.gameDuration)
+        );
 
         return {
           matchId,
           championName: participant.championName,
+          champLevel: participant.champLevel || 1,
           kills: participant.kills,
           deaths: participant.deaths,
           assists: participant.assists,
           win: participant.win,
           damage: participant.totalDamageDealtToChampions,
           gameDuration: matchData.info.gameDuration,
-        } as CleanedMatchData;
+          gameCreation: matchData.info.gameCreation,
+          queueId: matchData.info.queueId,
+          queueName: getQueueName(matchData.info.queueId),
+          items: [participant.item0, participant.item1, participant.item2, participant.item3, participant.item4, participant.item5, participant.item6],
+          cs,
+          csPerMin: durationMin > 0 ? parseFloat((cs / durationMin).toFixed(1)) : 0,
+          visionScore: participant.visionScore || 0,
+          multikill: getMultikillLabel(participant),
+          killParticipation,
+          summoner1Id: participant.summoner1Id,
+          summoner2Id: participant.summoner2Id,
+          primaryRuneId: participant.perks?.styles?.[0]?.selections?.[0]?.perk || 0,
+          subStyleId: participant.perks?.styles?.[1]?.style || 0,
+          isMVP,
+          allParticipants,
+          goldEarned: participant.goldEarned || 0,
+        } as EnrichedMatchData;
       } catch (e) {
         console.warn(`Failed to fetch match ${matchId}`, e);
         return null;
@@ -166,7 +355,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     });
 
     const rawMatches = await Promise.all(matchPromises);
-    const recentMatches = rawMatches.filter((m): m is CleanedMatchData => m !== null);
+    const recentMatches = rawMatches.filter((m): m is EnrichedMatchData => m !== null);
 
     const wins = soloQueue?.wins || 0;
     const losses = soloQueue?.losses || 0;

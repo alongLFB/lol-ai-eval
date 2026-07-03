@@ -92,7 +92,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white overflow-hidden relative selection:bg-purple-500/30">
       {/* Background Decor */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[500px] bg-gradient-to-b from-blue-900/20 to-purple-900/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[500px] bg-gradient-to-b from-blue-900/20 to-purple-900/10 blur-[100px] rounded-full pointer-events-none" />
       
       <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
         <div className="text-center mb-12 animate-in fade-in slide-in-from-top-4 duration-1000">
