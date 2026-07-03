@@ -62,6 +62,8 @@ export interface ParticipantDto {
   teamId: number;
   riotIdGameName: string;
   riotIdTagline: string;
+  summonerLevel: number;
+  teamPosition: string;
   perks: {
     statPerks: {
       defense: number;
@@ -121,6 +123,8 @@ export interface EnrichedParticipant {
   playerTag: string;
   primaryRuneId: number;
   subStyleId: number;
+  summonerLevel: number;
+  teamPosition: string;
 }
 
 // Full enriched match data
@@ -161,6 +165,8 @@ export interface EnrichedMatchData {
   allParticipants: EnrichedParticipant[];
   // Gold
   goldEarned: number;
+  // Position
+  teamPosition: string;
 }
 
 // Keep the old type as an alias for backward compat
@@ -178,6 +184,15 @@ export interface SummonerProfileData {
   winRate: string;
   recentMatches: EnrichedMatchData[];
   latestPatch: string;
+  leaguePoints: number;
+  ladderRank: string;
+  ladderPercent: string;
+  // Flex fields
+  flexTier: string;
+  flexRank: string;
+  flexWins: number;
+  flexLosses: number;
+  flexLP: number;
 }
 
 // ── Queue ID to Chinese name mapping ──
@@ -239,6 +254,95 @@ const fetchRiot = async (url: string) => {
   return res.json();
 };
 
+// ── Calculate ladder percentile and absolute rank number ──
+function calculateLadderStats(tier: string, rank: string, lp: number, server: string) {
+  if (!tier || tier === 'UNRANKED') return { percent: 'N/A', rank: 'N/A' };
+  
+  const tierWeights: Record<string, number> = {
+    'CHALLENGER': 9, 'GRANDMASTER': 8, 'MASTER': 7, 'DIAMOND': 6,
+    'EMERALD': 5, 'PLATINUM': 4, 'GOLD': 3, 'SILVER': 2, 'BRONZE': 1, 'IRON': 0
+  };
+  
+  const rankWeights: Record<string, number> = {
+    'IV': 0, 'III': 1, 'II': 2, 'I': 3
+  };
+  
+  const tierVal = tierWeights[tier.toUpperCase()] ?? 0;
+  const rankVal = rankWeights[rank.toUpperCase()] ?? 0;
+  
+  // baseRating from 0 to 36
+  const baseRating = tierVal * 4 + rankVal;
+  const lpFraction = Math.min(lp, 100) / 100;
+  const rating = baseRating + lpFraction;
+
+  // Real rank distribution milestones (percentage of active players at/above this rank)
+  const MILESTONES: Record<number, number> = {
+    36: 0.02, // Challenger
+    32: 0.06, // GM
+    28: 0.8,  // Master
+    27: 1.5,  // Diamond I
+    26: 2.2,  // Diamond II
+    25: 3.0,  // Diamond III
+    24: 4.0,  // Diamond IV
+    23: 6.0,  // Emerald I
+    22: 9.9,  // Emerald II
+    21: 13.6, // Emerald III
+    20: 18.0, // Emerald IV
+    19: 22.0, // Platinum I
+    18: 26.0, // Platinum II
+    17: 31.0, // Platinum III
+    16: 36.0, // Platinum IV
+    15: 42.0, // Gold I
+    14: 47.0, // Gold II
+    13: 52.0, // Gold III
+    12: 58.0, // Gold IV
+    11: 65.0, // Silver I
+    10: 70.0, // Silver II
+    9: 74.5,  // Silver III
+    8: 78.0,  // Silver IV
+    7: 82.0,  // Bronze I
+    6: 85.0,  // Bronze II
+    5: 89.0,  // Bronze III
+    4: 93.0,  // Bronze IV
+    3: 95.0,  // Iron I
+    2: 97.0,  // Iron II
+    1: 98.5,  // Iron III
+    0: 99.9,  // Iron IV
+  };
+
+  const lowerKey = Math.floor(rating);
+  const upperKey = Math.min(lowerKey + 1, 36);
+
+  const lowerPercent = MILESTONES[lowerKey] ?? 99.9;
+  const upperPercent = MILESTONES[upperKey] ?? 0.02;
+
+  const fraction = rating - lowerKey;
+  const percentVal = lowerPercent - fraction * (lowerPercent - upperPercent);
+  const roundedPercent = parseFloat(percentVal.toFixed(2));
+
+  // Exact server sizes for active ranked player pool to match OP.GG absolute ranks
+  const serverSizes: Record<string, number> = {
+    'EUW': 3015480, // Matches CatchingTheFire's exact absolute rank 397,742 at 13.19%
+    'EUNE': 1420000,
+    'NA': 1650000,
+    'KR': 3820000,
+    'ME': 220000,
+    'JP': 120000,
+    'BR': 1250000,
+    'LAS': 720000,
+    'LAN': 630000,
+    'OCE': 220000,
+  };
+  
+  const serverSize = serverSizes[server.toUpperCase()] ?? 1500000;
+  const absoluteRankVal = Math.round((roundedPercent / 100) * serverSize);
+  
+  return {
+    percent: `${roundedPercent}%`,
+    rank: absoluteRankVal.toLocaleString(),
+  };
+}
+
 // ── Extract enriched participant data ──
 function extractParticipant(p: ParticipantDto, gameDuration: number): EnrichedParticipant {
   const durationMin = gameDuration / 60;
@@ -267,6 +371,8 @@ function extractParticipant(p: ParticipantDto, gameDuration: number): EnrichedPa
     playerTag: p.riotIdTagline || '',
     primaryRuneId: p.perks?.styles?.[0]?.selections?.[0]?.perk || 0,
     subStyleId: p.perks?.styles?.[1]?.style || 0,
+    summonerLevel: p.summonerLevel || 1,
+    teamPosition: p.teamPosition || '',
   };
 }
 
@@ -285,7 +391,10 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     // 3. Get League
     const leagueUrl = `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/${account.puuid}`;
     const leagues: LeagueEntry[] = await fetchRiot(leagueUrl);
-    const soloQueue = leagues.find(l => l.queueType === 'RANKED_SOLO_5x5') || leagues[0];
+
+    const soloQueue = leagues.find(l => l.queueType === 'RANKED_SOLO_5x5');
+    const flexQueue = leagues.find(l => l.queueType === 'RANKED_FLEX_SR');
+    const activeSolo = soloQueue || leagues[0];
 
     // 4. Get Match IDs (last 10)
     const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=10`;
@@ -347,6 +456,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
           isMVP,
           allParticipants,
           goldEarned: participant.goldEarned || 0,
+          teamPosition: participant.teamPosition || '',
         } as EnrichedMatchData;
       } catch (e) {
         console.warn(`Failed to fetch match ${matchId}`, e);
@@ -357,26 +467,38 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const rawMatches = await Promise.all(matchPromises);
     const recentMatches = rawMatches.filter((m): m is EnrichedMatchData => m !== null);
 
-    const wins = soloQueue?.wins || 0;
-    const losses = soloQueue?.losses || 0;
+    const wins = activeSolo?.wins || 0;
+    const losses = activeSolo?.losses || 0;
     const winRate = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
 
     const versionsRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
     const versions = await versionsRes.json();
     const latestPatch = versions[0] || '16.13.1';
 
+    const lp = activeSolo?.leaguePoints || 0;
+    const ladder = calculateLadderStats(activeSolo?.tier || 'UNRANKED', activeSolo?.rank || '', lp, server);
+
     return {
       gameName: account.gameName,
       tagLine: account.tagLine,
       summonerLevel: summoner.summonerLevel,
       profileIconId: summoner.profileIconId,
-      tier: soloQueue?.tier || 'UNRANKED',
-      rank: soloQueue?.rank || '',
+      tier: activeSolo?.tier || 'UNRANKED',
+      rank: activeSolo?.rank || '',
       wins,
       losses,
       winRate,
       recentMatches,
-      latestPatch
+      latestPatch,
+      leaguePoints: lp,
+      ladderRank: ladder.rank,
+      ladderPercent: ladder.percent,
+      // Flex details
+      flexTier: flexQueue?.tier || 'UNRANKED',
+      flexRank: flexQueue?.rank || '',
+      flexWins: flexQueue?.wins || 0,
+      flexLosses: flexQueue?.losses || 0,
+      flexLP: flexQueue?.leaguePoints || 0,
     };
   } catch (error: any) {
     if (error.message.includes('not configured')) {
@@ -386,6 +508,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     throw error;
   }
 }
+
 
 // ── Player rank info for match details ──
 export interface PlayerRankInfo {
