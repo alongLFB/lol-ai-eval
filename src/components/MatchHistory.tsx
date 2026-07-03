@@ -127,7 +127,6 @@ function getTierColor(tier: string): string {
   }
 }
 
-// ── Maps raw tier name to OP.GG-style Chinese name ──
 function getTierChineseName(tier: string): string {
   const map: Record<string, string> = {
     'CHALLENGER': '最强王者',
@@ -179,13 +178,13 @@ function MatchDetailPanel({
         won ? "bg-blue-900/40 text-blue-300" : "bg-red-900/40 text-red-300"
       )}>
         <span>{won ? '胜利' : '败北'} ({teamLabel})</span>
-        <div className="flex items-center gap-6 text-xs text-gray-400 font-normal font-mono">
-          <span className="w-14 text-center">段位</span>
-          <span className="w-16 text-center">KDA</span>
-          <span className="w-16 text-center">伤害</span>
-          <span className="w-12 text-center">CS</span>
-          <span className="w-12 text-center">视野</span>
-          <span className="w-[168px] text-center font-sans">装备</span>
+        <div className="flex items-center gap-6 text-xs text-gray-400 font-normal font-mono shrink-0">
+          <span className="w-14 text-center shrink-0">段位</span>
+          <span className="w-16 text-center shrink-0">KDA</span>
+          <span className="w-16 text-center shrink-0">伤害</span>
+          <span className="w-12 text-center shrink-0">CS</span>
+          <span className="w-12 text-center shrink-0">视野</span>
+          <span className="w-[190px] text-center font-sans shrink-0">装备</span>
         </div>
       </div>
       <div className={cn(
@@ -201,7 +200,7 @@ function MatchDetailPanel({
               isMe ? (won ? "bg-blue-900/25" : "bg-red-900/25") : "bg-gray-900/50",
               idx < team.length - 1 && "border-b border-gray-800/50"
             )}>
-              <div className="flex items-center gap-2 min-w-[160px]">
+              <div className="flex items-center gap-2 min-w-[170px] shrink-0">
                 <div className="relative w-8 h-8 rounded-md overflow-hidden border border-gray-700 shrink-0">
                   <img
                     crossOrigin="anonymous"
@@ -214,20 +213,20 @@ function MatchDetailPanel({
                   />
                   <span className="absolute bottom-0 right-0 text-[9px] bg-black/80 px-0.5 font-bold leading-tight">{p.champLevel}</span>
                 </div>
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 shrink-0">
                   <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner1Id, patch)} alt="" className="w-4 h-4 rounded-sm" />
                   <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner2Id, patch)} alt="" className="w-4 h-4 rounded-sm" />
                 </div>
                 <span className={cn(
-                  "text-xs truncate max-w-[90px]",
+                  "text-xs truncate max-w-[95px] shrink-0",
                   isMe ? "text-white font-bold" : "text-gray-300"
                 )}>
                   {p.playerName || p.championName}
                 </span>
               </div>
 
-              <div className="flex items-center gap-6">
-                <div className="w-14 text-center">
+              <div className="flex items-center gap-6 shrink-0">
+                <div className="w-14 text-center shrink-0">
                   {rankData?.loading ? (
                     <Loader2 className="w-3 h-3 animate-spin text-gray-500 mx-auto" />
                   ) : pRank ? (
@@ -238,13 +237,13 @@ function MatchDetailPanel({
                     <span className="text-[10px] text-gray-600">-</span>
                   )}
                 </div>
-                <div className="w-16 text-center">
+                <div className="w-16 text-center shrink-0">
                   <span className="text-xs text-gray-200 font-mono">
                     {p.kills}/{p.deaths}/{p.assists}
                   </span>
-                  <div className="text-[10px] text-gray-500">{formatKDA(p.kills, p.deaths, p.assists)}</div>
+                  <div className="text-[10px] text-gray-500 font-mono">{formatKDA(p.kills, p.deaths, p.assists)}</div>
                 </div>
-                <div className="w-16">
+                <div className="w-16 shrink-0">
                   <div className="text-xs text-center text-gray-300 font-mono">{(p.totalDamageDealtToChampions / 1000).toFixed(1)}k</div>
                   <div className="w-full h-1 bg-gray-800 rounded-full mt-0.5 overflow-hidden">
                     <div
@@ -253,16 +252,16 @@ function MatchDetailPanel({
                     />
                   </div>
                 </div>
-                <div className="w-12 text-center">
+                <div className="w-12 text-center shrink-0">
                   <div className="text-xs text-gray-300 font-mono">{p.cs}</div>
-                  <div className="text-[10px] text-gray-500">{p.csPerMin}/分</div>
+                  <div className="text-[10px] text-gray-550 font-mono">{p.csPerMin}/分</div>
                 </div>
-                <div className="w-12 text-center text-xs text-gray-400 font-mono">
+                <div className="w-12 text-center text-xs text-gray-400 font-mono shrink-0">
                   {p.visionScore}
                 </div>
-                <div className="flex gap-0.5 w-[168px] justify-center">
+                <div className="flex gap-0.5 w-[190px] justify-center shrink-0">
                   {p.items.slice(0, 6).map((itemId, i) => (
-                    <div key={i} className="w-6 h-6 rounded-sm overflow-hidden bg-gray-800 border border-gray-700/50">
+                    <div key={i} className="w-6 h-6 rounded-sm overflow-hidden bg-gray-800 border border-gray-700/50 shrink-0">
                       {itemId > 0 ? (
                         <img
                           crossOrigin="anonymous"
@@ -273,7 +272,7 @@ function MatchDetailPanel({
                       ) : null}
                     </div>
                   ))}
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50 ml-1">
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50 ml-1 shrink-0">
                     {(p.items[6] || 0) > 0 ? (
                       <img
                         crossOrigin="anonymous"
@@ -314,8 +313,8 @@ function MatchDetailPanel({
             <span className="text-xs text-gray-400">加载段位信息...</span>
           </div>
         )}
-        <div className="w-full overflow-x-auto select-none pb-2 scrollbar-none">
-          <div className="min-w-[760px] space-y-4">
+        <div className="w-full overflow-x-auto select-none pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+          <div className="min-w-[800px] space-y-4">
             {renderTeamTable(blueTeam, '蓝队', blueWon)}
             {renderTeamTable(redTeam, '红队', !blueWon)}
           </div>
@@ -323,18 +322,6 @@ function MatchDetailPanel({
       </div>
     </motion.div>
   );
-}
-
-// ── Teammate Stats Interface ──
-interface TeammateStat {
-  playerName: string;
-  playerTag: string;
-  summonerLevel: number;
-  lastChampion: string;
-  wins: number;
-  losses: number;
-  games: number;
-  winRate: number;
 }
 
 // ── Main MatchHistory Component ──
@@ -533,7 +520,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   }, [expandedMatch, rankCache, fetchRanksForMatch]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 select-none">
+    <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 select-none px-1 sm:px-2">
       {/* Profile Header */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 p-6 flex flex-col md:flex-row items-center gap-6 shadow-2xl">
         <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -577,6 +564,58 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         </div>
       </div>
 
+      {/* ── Mobile/Tablet Only Rank Cards (below Header, above Tabs) ── */}
+      <div className="block xl:hidden bg-gray-900/70 border border-gray-800 rounded-xl p-4 shadow-lg backdrop-blur-sm space-y-4">
+        <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
+          <Trophy className="w-4 h-4 text-yellow-500" />
+          <h4 className="text-sm font-bold text-gray-200">排位赛段位</h4>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Solo Queue Rank Card */}
+          <div className="flex items-center gap-3.5 p-3 bg-gray-950/40 rounded-lg border border-gray-800/40 hover:border-gray-700/40 transition-colors">
+            <div className="w-12 h-12 bg-blue-900/10 rounded-full flex items-center justify-center border border-blue-500/20 shrink-0">
+              <Trophy className={cn("w-6 h-6", getTierColor(profile.tier))} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] text-gray-500 font-bold">单双排位</div>
+              <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
+                <span>{getTierChineseName(profile.tier)} {profile.rank}</span>
+                {profile.leaguePoints > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.leaguePoints} LP)</span>}
+              </div>
+              {profile.tier !== 'UNRANKED' ? (
+                <div className="text-[10px] text-gray-450 mt-0.5">
+                  {profile.wins}胜 {profile.losses}负 ({profile.winRate}% 胜率)
+                </div>
+              ) : (
+                <div className="text-[10px] text-gray-500 mt-0.5">暂无单双排位战绩</div>
+              )}
+            </div>
+          </div>
+
+          {/* Flex Queue Rank Card */}
+          <div className="flex items-center gap-3.5 p-3 bg-gray-950/40 rounded-lg border border-gray-800/40 hover:border-gray-700/40 transition-colors">
+            <div className="w-12 h-12 bg-purple-900/10 rounded-full flex items-center justify-center border border-purple-500/20 shrink-0">
+              <Trophy className={cn("w-6 h-6", getTierColor(profile.flexTier))} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] text-gray-500 font-bold">灵活组排</div>
+              <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
+                <span>{getTierChineseName(profile.flexTier)} {profile.flexRank}</span>
+                {profile.flexLP > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.flexLP} LP)</span>}
+              </div>
+              {profile.flexTier !== 'UNRANKED' ? (
+                <div className="text-[10px] text-gray-450 mt-0.5">
+                  {profile.flexWins}胜 {profile.flexLosses}负 ({Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100)}% 胜率)
+                </div>
+              ) : (
+                <div className="text-[10px] text-gray-500 mt-0.5">暂无灵活排位战绩</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Game Mode Tab Filters ── */}
       <div className="flex border-b border-gray-800 gap-1 overflow-x-auto pb-px">
         {[
@@ -603,20 +642,20 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         ))}
       </div>
 
-      {/* OP.GG Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* OP.GG Layout Grid - Responsive columns at different width levels */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
-        {/* LEFT COLUMN: Sidebar (Rank Cards & Teammates) - On mobile, flows below matches */}
-        <div className="lg:col-span-4 space-y-4 w-full order-2 lg:order-1">
+        {/* LEFT COLUMN: Sidebar (Rank Cards & Teammates) - Stacks on mobile/tablet below matches */}
+        <div className="xl:col-span-4 space-y-4 w-full order-2 xl:order-1">
           
           {/* Rank Cards (Solo & Flex) */}
-          <div className="bg-gray-900/70 border border-gray-800 rounded-xl p-4 shadow-lg backdrop-blur-sm space-y-4">
+          <div className="hidden xl:block bg-gray-900/70 border border-gray-800 rounded-xl p-4 shadow-lg backdrop-blur-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
               <Trophy className="w-4 h-4 text-yellow-500" />
               <h4 className="text-sm font-bold text-gray-200">排位赛段位</h4>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
               {/* Solo Queue Rank Card */}
               <div className="flex items-center gap-3.5 p-3 bg-gray-950/40 rounded-lg border border-gray-800/40 hover:border-gray-700/40 transition-colors">
                 <div className="w-12 h-12 bg-blue-900/10 rounded-full flex items-center justify-center border border-blue-500/20 shrink-0">
@@ -624,12 +663,12 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 </div>
                 <div className="min-w-0">
                   <div className="text-[10px] text-gray-500 font-bold">单双排位</div>
-                  <div className="text-sm font-black text-gray-100 flex items-center gap-1.5">
+                  <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
                     <span>{getTierChineseName(profile.tier)} {profile.rank}</span>
                     {profile.leaguePoints > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.leaguePoints} LP)</span>}
                   </div>
                   {profile.tier !== 'UNRANKED' ? (
-                    <div className="text-[10px] text-gray-400 mt-0.5">
+                    <div className="text-[10px] text-gray-450 mt-0.5">
                       {profile.wins}胜 {profile.losses}负 ({profile.winRate}% 胜率)
                     </div>
                   ) : (
@@ -645,12 +684,12 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 </div>
                 <div className="min-w-0">
                   <div className="text-[10px] text-gray-500 font-bold">灵活组排</div>
-                  <div className="text-sm font-black text-gray-100 flex items-center gap-1.5">
+                  <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
                     <span>{getTierChineseName(profile.flexTier)} {profile.flexRank}</span>
                     {profile.flexLP > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.flexLP} LP)</span>}
                   </div>
                   {profile.flexTier !== 'UNRANKED' ? (
-                    <div className="text-[10px] text-gray-400 mt-0.5">
+                    <div className="text-[10px] text-gray-450 mt-0.5">
                       {profile.flexWins}胜 {profile.flexLosses}负 ({Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100)}% 胜率)
                     </div>
                   ) : (
@@ -734,8 +773,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
         </div>
 
-        {/* RIGHT COLUMN: Matches Summary & List - On mobile, flows to the top */}
-        <div className="lg:col-span-8 space-y-4 w-full min-w-0 order-1 lg:order-2">
+        {/* RIGHT COLUMN: Matches Summary & List - Stacks at the top on mobile/tablet */}
+        <div className="xl:col-span-8 space-y-4 w-full min-w-0 order-1 xl:order-2">
           
           {/* Recent Matches Summary Bar */}
           {summaryStats ? (
@@ -867,43 +906,210 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 <div
                   key={match.matchId}
                   className={cn(
-                    "rounded-xl border overflow-hidden transition-all duration-200",
+                    "rounded-xl border overflow-hidden transition-all duration-200 relative",
                     match.win
                       ? "bg-blue-950/20 border-blue-900/40 shadow-[inset_4px_0_0_rgba(59,130,246,0.6)]"
                       : "bg-red-950/20 border-red-900/40 shadow-[inset_4px_0_0_rgba(239,68,68,0.6)]"
                   )}
                 >
-                  {/* Collapsed row with Horizontal Swipe on Mobile */}
-                  <div className="w-full overflow-x-auto scrollbar-none select-none">
-                    <div
-                      className={cn(
-                        "min-w-[690px] flex items-center justify-between gap-3 px-4 py-3 cursor-pointer transition-colors",
-                        match.win ? "hover:bg-blue-900/15" : "hover:bg-red-900/15"
-                      )}
-                      onClick={() => handleToggleMatch(match)}
-                    >
-                      {/* Game mode + outcome */}
-                      <div className="flex flex-col items-start gap-0.5 min-w-[70px] shrink-0">
+                  {/* ──────────────────────────────────────────────────────── */}
+                  {/* 1. DESKTOP ONLY COLLAPSED CARD (sm and up)              */}
+                  {/* ──────────────────────────────────────────────────────── */}
+                  <div
+                    className={cn(
+                      "hidden sm:flex items-center justify-between gap-3 px-4 py-3 cursor-pointer hover:bg-gray-900/20 transition-all duration-150 select-none"
+                    )}
+                    onClick={() => handleToggleMatch(match)}
+                  >
+                    {/* Game mode + outcome */}
+                    <div className="flex flex-col items-start gap-0.5 min-w-[70px] shrink-0">
+                      <span className={cn(
+                        "text-[9px] font-bold px-1.5 py-0.5 rounded border leading-tight",
+                        getQueueStyle(match.queueName)
+                      )}>
+                        {match.queueName}
+                      </span>
+                      <span className={cn(
+                        "text-xs font-bold sm:text-sm",
+                        match.win ? "text-blue-400" : "text-red-400"
+                      )}>
+                        {match.win ? '胜利' : '失败'}
+                      </span>
+                      <div className="text-[9px] text-gray-500 leading-none mt-0.5">
+                        {Math.floor(match.gameDuration / 60)}分{(match.gameDuration % 60).toString().padStart(2, '0')}秒
+                      </div>
+                    </div>
+
+                    {/* Champion + Spells + Runes */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border border-gray-700">
+                        <img
+                          crossOrigin="anonymous"
+                          src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
+                          alt={match.championName}
+                          className="w-full h-full object-cover transform scale-110"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
+                          }}
+                        />
+                        <span className="absolute bottom-0 right-0 text-[8px] bg-black/80 px-0.5 font-bold leading-tight rounded-tl">{match.champLevel}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-4.5 h-4.5 rounded-sm" />
+                        <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-4.5 h-4.5 rounded-sm" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <img
+                          crossOrigin="anonymous"
+                          src={getRuneIconUrl(match.primaryRuneId, true)}
+                          alt=""
+                          className="w-4.5 h-4.5 rounded-full bg-gray-900"
+                        />
+                        <img
+                          crossOrigin="anonymous"
+                          src={getRuneIconUrl(match.subStyleId, false)}
+                          alt=""
+                          className="w-4.5 h-4.5 rounded-full bg-gray-900 opacity-70"
+                        />
+                      </div>
+                    </div>
+
+                    {/* KDA block */}
+                    <div className="flex flex-col items-center min-w-[95px] shrink-0">
+                      <span className="text-gray-100 font-bold text-sm sm:text-base tracking-wider font-mono">
+                        {match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={cn(
-                          "text-[9px] font-bold px-1.5 py-0.5 rounded border leading-tight",
-                          getQueueStyle(match.queueName)
+                          "text-[10px] sm:text-xs font-bold",
+                          kda === 'Perfect' ? 'text-yellow-400' :
+                            parseFloat(kda) >= 5 ? 'text-orange-400' :
+                              parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
                         )}>
-                          {match.queueName}
+                          {kda} KDA
                         </span>
+                        <span className="text-[9px] text-gray-500 font-sans">({kpPercent}%)</span>
+                      </div>
+                    </div>
+
+                    {/* CS & Vision */}
+                    <div className="flex flex-col items-center min-w-[55px] shrink-0">
+                      <span className="text-xs text-gray-300 font-mono">CS {match.cs}</span>
+                      <span className="text-[9px] text-gray-500">{match.csPerMin}/分</span>
+                      <div className="flex items-center gap-0.5 mt-0.5 text-[9px] text-gray-500">
+                        <Eye className="w-2.5 h-2.5" />
+                        <span>{match.visionScore}</span>
+                      </div>
+                    </div>
+
+                    {/* Items row */}
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {match.items.slice(0, 6).map((itemId, i) => (
+                        <div key={i} className="w-6.5 h-6.5 rounded-sm overflow-hidden bg-gray-800/80 border border-gray-700/50">
+                          {itemId > 0 ? (
+                            <img
+                              crossOrigin="anonymous"
+                              src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${itemId}.png`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : null}
+                        </div>
+                      ))}
+                      <div className="w-6.5 h-6.5 rounded-full overflow-hidden bg-gray-800/80 border border-gray-700/50 ml-0.5">
+                        {(match.items[6] || 0) > 0 ? (
+                          <img
+                            crossOrigin="anonymous"
+                            src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* Badges, Time and Arrow */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {match.multikill && (
                         <span className={cn(
-                          "text-xs font-bold sm:text-sm",
+                          "text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm leading-none",
+                          getMultikillStyle(match.multikill)
+                        )}>
+                          {match.multikill}
+                        </span>
+                      )}
+                      {match.isMVP && (
+                        <span className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 leading-none">
+                          MVP
+                        </span>
+                      )}
+                      
+                      <span className="text-[9px] text-gray-500 shrink-0 ml-1">
+                        {getRelativeTime(match.gameCreation)}
+                      </span>
+                      
+                      {/* Premium expand button visual indicator */}
+                      <div className={cn(
+                        "w-7 h-7 flex items-center justify-center rounded-md border transition-colors",
+                        match.win 
+                          ? "bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/25" 
+                          : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/25"
+                      )}>
+                        <ChevronDown className={cn(
+                          "w-4 h-4 transition-transform duration-250",
+                          isExpanded && "rotate-180"
+                        )} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ──────────────────────────────────────────────────────── */}
+                  {/* 2. MOBILE ONLY NATIVE-LIKE MATCH CARD (below sm)        */}
+                  {/* ──────────────────────────────────────────────────────── */}
+                  <div
+                    className="flex sm:hidden flex-col p-3.5 cursor-pointer select-none"
+                    onClick={() => handleToggleMatch(match)}
+                  >
+                    {/* Top Row: outcome, duration, mode, time, expand chevron */}
+                    <div className="flex items-center justify-between border-b border-gray-800/40 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "text-xs font-black",
                           match.win ? "text-blue-400" : "text-red-400"
                         )}>
-                          {match.win ? '胜利' : '失败'}
+                          {match.win ? '胜利' : '败北'}
                         </span>
-                        <div className="text-[9px] text-gray-500 leading-none mt-0.5">
+                        <span className="text-[10px] text-gray-500 font-medium">
                           {Math.floor(match.gameDuration / 60)}分{(match.gameDuration % 60).toString().padStart(2, '0')}秒
-                        </div>
+                        </span>
                       </div>
 
-                      {/* Champion + Spells + Runes */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-gray-400 font-bold bg-gray-800/50 px-1 py-0.5 rounded leading-none">
+                          {match.queueName}
+                        </span>
+                        <span className="text-[9px] text-gray-500">
+                          {getRelativeTime(match.gameCreation)}
+                        </span>
+                        {/* Down Chevron Box exactly like screenshot */}
+                        <div className={cn(
+                          "w-6 h-6 flex items-center justify-center rounded border shrink-0",
+                          match.win
+                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                            : "bg-red-500/10 text-red-400 border-red-500/20"
+                        )}>
+                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", isExpanded && "rotate-180")} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Main Content Area: grid layout with Champion, KDA + Stats, and Item 3x2 grid */}
+                    <div className="grid grid-cols-12 gap-3 mt-3 items-center">
+                      
+                      {/* Left: Champ, Spells & Runes (col-span-4) */}
+                      <div className="col-span-4 flex items-center gap-2 shrink-0">
+                        {/* Champ Icon */}
+                        <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-gray-700 shrink-0">
                           <img
                             crossOrigin="anonymous"
                             src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
@@ -915,114 +1121,72 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           />
                           <span className="absolute bottom-0 right-0 text-[8px] bg-black/80 px-0.5 font-bold leading-tight rounded-tl">{match.champLevel}</span>
                         </div>
-                        <div className="flex flex-col gap-0.5">
-                          <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-4.5 h-4.5 rounded-sm" />
-                          <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-4.5 h-4.5 rounded-sm" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <img
-                            crossOrigin="anonymous"
-                            src={getRuneIconUrl(match.primaryRuneId, true)}
-                            alt=""
-                            className="w-4.5 h-4.5 rounded-full bg-gray-900"
-                          />
-                          <img
-                            crossOrigin="anonymous"
-                            src={getRuneIconUrl(match.subStyleId, false)}
-                            alt=""
-                            className="w-4.5 h-4.5 rounded-full bg-gray-900 opacity-70"
-                          />
+                        {/* Spells & Runes stack */}
+                        <div className="flex gap-1 shrink-0">
+                          <div className="flex flex-col gap-0.5">
+                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-4 h-4 rounded-sm" />
+                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-4 h-4 rounded-sm" />
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <img crossOrigin="anonymous" src={getRuneIconUrl(match.primaryRuneId, true)} alt="" className="w-4 h-4 rounded-full bg-gray-900" />
+                            <img crossOrigin="anonymous" src={getRuneIconUrl(match.subStyleId, false)} alt="" className="w-4 h-4 rounded-full bg-gray-900 opacity-60" />
+                          </div>
                         </div>
                       </div>
 
-                      {/* KDA block */}
-                      <div className="flex flex-col items-center min-w-[95px] shrink-0">
-                        <span className="text-gray-100 font-bold text-sm sm:text-base tracking-wider font-mono">
+                      {/* Center: KDA & Stats details (col-span-4) */}
+                      <div className="col-span-4 flex flex-col justify-center min-w-0">
+                        <div className="text-xs font-bold text-gray-100 font-mono truncate">
                           {match.kills} / <span className="text-red-400">{match.deaths}</span> / {match.assists}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={cn(
-                            "text-[10px] sm:text-xs font-bold",
-                            kda === 'Perfect' ? 'text-yellow-400' :
-                              parseFloat(kda) >= 5 ? 'text-orange-400' :
-                                parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
-                          )}>
-                            {kda} KDA
-                          </span>
-                          <span className="text-[9px] text-gray-500 font-sans">({kpPercent}%)</span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-bold font-mono mt-0.5">
+                          {kda}:1 <span className="text-[8px] text-gray-500 font-normal">KDA</span>
+                        </div>
+                        <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
+                          CS {match.cs} | KP {kpPercent}%
                         </div>
                       </div>
 
-                      {/* CS & Vision */}
-                      <div className="flex flex-col items-center min-w-[55px] shrink-0">
-                        <span className="text-xs text-gray-300 font-mono">CS {match.cs}</span>
-                        <span className="text-[9px] text-gray-500">{match.csPerMin}/分</span>
-                        <div className="flex items-center gap-0.5 mt-0.5 text-[9px] text-gray-500">
-                          <Eye className="w-2.5 h-2.5" />
-                          <span>{match.visionScore}</span>
+                      {/* Right: Items 3x2 Grid (col-span-4) */}
+                      <div className="col-span-4 flex items-center gap-1 justify-end shrink-0">
+                        <div className="grid grid-cols-3 gap-0.5 shrink-0">
+                          {match.items.slice(0, 6).map((itemId, i) => (
+                            <div key={i} className="w-4.5 h-4.5 rounded-sm overflow-hidden bg-gray-800 border border-gray-700/50">
+                              {itemId > 0 ? (
+                                <img
+                                  crossOrigin="anonymous"
+                                  src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${itemId}.png`}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : null}
+                            </div>
+                          ))}
                         </div>
-                      </div>
-
-                      {/* Items row */}
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        {match.items.slice(0, 6).map((itemId, i) => (
-                          <div key={i} className="w-6.5 h-6.5 rounded-sm overflow-hidden bg-gray-800/80 border border-gray-700/50">
-                            {itemId > 0 ? (
+                        {/* Trinket & Badge (MVP) */}
+                        <div className="flex flex-col gap-1 items-center shrink-0">
+                          <div className="w-4.5 h-4.5 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50">
+                            {(match.items[6] || 0) > 0 ? (
                               <img
                                 crossOrigin="anonymous"
-                                src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${itemId}.png`}
+                                src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
                             ) : null}
                           </div>
-                        ))}
-                        <div className="w-6.5 h-6.5 rounded-full overflow-hidden bg-gray-800/80 border border-gray-700/50 ml-0.5">
-                          {(match.items[6] || 0) > 0 ? (
-                            <img
-                              crossOrigin="anonymous"
-                              src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          ) : null}
+                          {match.isMVP && (
+                            <span className="text-[7px] font-black px-1 py-0 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 transform scale-90 leading-none">
+                              MVP
+                            </span>
+                          )}
                         </div>
-                      </div>
-
-                      {/* Badges + arrow */}
-                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                        {matchRankData && !matchRankData.loading && matchRankData.averageRank && matchRankData.averageRank !== 'UNRANKED' && (
-                          <span className="hidden xl:flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gray-700/40 text-gray-300 border border-gray-600/40">
-                            {matchRankData.averageRank}
-                          </span>
-                        )}
-                        {match.multikill && (
-                          <span className={cn(
-                            "text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm leading-none",
-                            getMultikillStyle(match.multikill)
-                          )}>
-                            {match.multikill}
-                          </span>
-                        )}
-                        {match.isMVP && (
-                          <span className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 leading-none">
-                            MVP
-                          </span>
-                        )}
-                        
-                        <span className="text-[9px] text-gray-500 shrink-0 ml-1">
-                          {getRelativeTime(match.gameCreation)}
-                        </span>
-                        
-                        <ChevronDown className={cn(
-                          "w-4 h-4 text-gray-500 transition-transform duration-200 ml-1 shrink-0",
-                          isExpanded && "rotate-180"
-                        )} />
                       </div>
 
                     </div>
                   </div>
 
+                  {/* Expanded Detail Panel */}
                   <AnimatePresence>
                     {isExpanded && (
                       <MatchDetailPanel

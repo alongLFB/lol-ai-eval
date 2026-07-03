@@ -396,8 +396,8 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const flexQueue = leagues.find(l => l.queueType === 'RANKED_FLEX_SR');
     const activeSolo = soloQueue || leagues[0];
 
-    // 4. Get Match IDs (last 10)
-    const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=10`;
+    // 4. Get Match IDs (last 20)
+    const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=20`;
     const matchIds: string[] = await fetchRiot(matchIdsUrl);
 
     // 5. Get Match Details (enriched)
