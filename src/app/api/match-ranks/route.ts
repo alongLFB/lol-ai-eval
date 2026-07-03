@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
     if (!puuids || !Array.isArray(puuids) || puuids.length === 0 || !server) {
       return NextResponse.json(
-        { error: '缺少参数: puuids (数组) 和 server' },
+        { error: 'Missing parameters / 缺少参数: puuids (array) and server' },
         { status: 400 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ranks, averageRank });
   } catch (error: any) {
     console.error('API /api/match-ranks Error:', error);
-    const message = error.message || '获取段位数据失败';
+    const message = error.message || 'Failed to fetch rank data / 获取段位数据失败';
     const status = error.message?.includes('limit exceeded') ? 429 : 500;
     return NextResponse.json({ error: message }, { status });
   }

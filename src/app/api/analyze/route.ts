@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
     if (!gameName || !tagLine || !server) {
       return NextResponse.json(
-        { error: '请输入完整的 Riot ID (GameName#TagLine) 并选择服务器' },
+        { error: locale === 'en' ? 'Missing required fields (GameName, TagLine, Server)' : '请输入完整的 Riot ID (GameName#TagLine) 并选择服务器' },
         { status: 400 }
       );
     }
@@ -29,7 +29,15 @@ export async function POST(req: Request) {
 
     // ── Fresh fetch from Riot API + AI ──
     const profile = await fetchSummonerData(gameName, tagLine, server);
-    const evaluation = await generateAIEvaluation(profile, locale);
+    let evaluation;
+    try {
+      evaluation = await generateAIEvaluation(profile, locale);
+    } catch (e: any) {
+      return NextResponse.json(
+        { error: locale === 'en' ? 'AI evaluation failed' : 'AI 总结生成失败，但战绩已获取', profile },
+        { status: 200 }
+      );
+    }
 
     // Write to cache and get timestamp
     const lastUpdated = setCachedData(server, gameName, tagLine, locale, profile, evaluation);
@@ -44,7 +52,8 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('API /api/analyze Error:', error);
     
-    const message = error.message || '服务器内部错误，似乎是虚空入侵了！';
+    const isEn = (error.message || '').includes('en'); // Simplified heuristic or pass locale through
+    const message = error.message || (isEn ? 'Internal server error' : '服务器内部错误，似乎是虚空入侵了！');
     const status = error.message?.includes('limit exceeded') ? 429 : 
                    error.message?.includes('not found') ? 404 : 500;
 

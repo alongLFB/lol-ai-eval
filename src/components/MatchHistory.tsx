@@ -304,8 +304,8 @@ function MatchDetailPanel({
         )}
         <div className="w-full overflow-x-auto select-none pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
           <div className="min-w-[800px] space-y-4">
-            {renderTeamTable(blueTeam, '蓝队', blueWon)}
-            {renderTeamTable(redTeam, '红队', !blueWon)}
+            {renderTeamTable(blueTeam, t('blueTeam'), blueWon)}
+            {renderTeamTable(redTeam, t('redTeam'), !blueWon)}
           </div>
         </div>
       </div>
@@ -632,14 +632,14 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               <Trophy className="w-4 h-4 text-yellow-500"/> 
               {profile.tier} {profile.rank} {profile.leaguePoints > 0 ? `(${profile.leaguePoints} LP)` : ''}
             </span>
-            <span className="flex items-center gap-1"><Target className="w-4 h-4 text-blue-400"/> {profile.wins}胜 {profile.losses}负</span>
-            <span className="flex items-center gap-1"><Swords className="w-4 h-4 text-red-400"/> 胜率 {profile.winRate}%</span>
+            <span className="flex items-center gap-1"><Target className="w-4 h-4 text-blue-400"/> {t('winsLossesShortNoSpace', { wins: profile.wins, losses: profile.losses })}</span>
+            <span className="flex items-center gap-1"><Swords className="w-4 h-4 text-red-400"/> {t('winRate')} {profile.winRate}%</span>
           </div>
           
           {profile.ladderRank && profile.ladderPercent !== 'N/A' && (
             <div className="mt-2 text-xs text-gray-400 font-medium flex items-center justify-center md:justify-start gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse mr-1"></span>
-              <span>{server.toUpperCase()} | 阶梯排名 <span className="text-blue-400 font-bold">{profile.ladderRank}</span> ({profile.ladderPercent} Top %)</span>
+              <span>{server.toUpperCase()} | {t('ladderRank')} <span className="text-blue-400 font-bold">{profile.ladderRank}</span> ({profile.ladderPercent}% {t('topPercent')})</span>
             </div>
           )}
         </div>
@@ -659,7 +659,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               <Trophy className={cn("w-6 h-6", getTierColor(profile.tier))} />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] text-gray-500 font-bold">单双排位</div>
+              <div className="text-[10px] text-gray-500 font-bold">{t("rankedSolo")}</div>
               <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
                 <span>{getTierChineseName(profile.tier, t)} {profile.rank}</span>
                 {profile.leaguePoints > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.leaguePoints} LP)</span>}
@@ -669,7 +669,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   {t('winsLosses', { wins: profile.wins, losses: profile.losses, winRate: profile.winRate })}
                 </div>
               ) : (
-                <div className="text-[10px] text-gray-500 mt-0.5">暂无单双排位战绩</div>
+                <div className="text-[10px] text-gray-500 mt-0.5">{t("noRankedSolo")}</div>
               )}
             </div>
           </div>
@@ -690,7 +690,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   {t('winsLosses', { wins: profile.flexWins, losses: profile.flexLosses, winRate: Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100) })}
                 </div>
               ) : (
-                <div className="text-[10px] text-gray-500 mt-0.5">暂无灵活排位战绩</div>
+                <div className="text-[10px] text-gray-500 mt-0.5">{t("noRankedFlex")}</div>
               )}
             </div>
           </div>
@@ -743,7 +743,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   <Trophy className={cn("w-6 h-6", getTierColor(profile.tier))} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] text-gray-500 font-bold">单双排位</div>
+                  <div className="text-[10px] text-gray-500 font-bold">{t("rankedSolo")}</div>
                   <div className="text-sm font-black text-gray-100 flex flex-wrap items-center gap-1">
                     <span>{getTierChineseName(profile.tier, t)} {profile.rank}</span>
                     {profile.leaguePoints > 0 && <span className="text-[10px] text-gray-400 font-normal">({profile.leaguePoints} LP)</span>}
@@ -753,7 +753,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       {t('winsLosses', { wins: profile.wins, losses: profile.losses, winRate: profile.winRate })}
                     </div>
                   ) : (
-                    <div className="text-[10px] text-gray-500 mt-0.5">暂无单双排位战绩</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">{t("noRankedSolo")}</div>
                   )}
                 </div>
               </div>
@@ -774,7 +774,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       {t('winsLosses', { wins: profile.flexWins, losses: profile.flexLosses, winRate: Math.round((profile.flexWins / (profile.flexWins + profile.flexLosses)) * 100) })}
                     </div>
                   ) : (
-                    <div className="text-[10px] text-gray-500 mt-0.5">暂无灵活排位战绩</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">{t("noRankedFlex")}</div>
                   )}
                 </div>
               </div>
@@ -786,7 +786,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
             <div className="flex items-center justify-between border-b border-gray-800 pb-2">
               <h4 className="text-sm font-bold text-gray-200 flex items-center gap-2">
                 <Users className="w-4 h-4 text-purple-400" />
-                经常同队 (合作 2 次及以上)
+                {t('frequentTeammates')}
               </h4>
               <span className="text-[10px] text-gray-500 font-bold">{t('teammatesCount', { count: teammateStats.length })}</span>
             </div>
@@ -816,7 +816,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       <div className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[130px]" title={`${tm.playerName}#${tm.playerTag}`}>
                         {tm.playerName} <span className="text-[9px] text-gray-500 font-normal">#{tm.playerTag}</span>
                       </div>
-                      <div className="text-[9px] text-gray-500 mt-0.5">等级 {tm.summonerLevel}</div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">{t('level')} {tm.summonerLevel}</div>
                     </div>
                   </div>
 
@@ -825,7 +825,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     <div className="text-xs font-medium text-gray-300">
                       <span className="text-blue-400 font-bold">{tm.wins}W</span>
                       <span className="text-gray-600 px-0.5"> / </span>
-                      <span className="text-red-400 font-bold">{tm.losses}败</span>
+                      <span className="text-red-400 font-bold">{tm.losses}{t('loss')}</span>
                     </div>
                     <div className="text-[9px] text-gray-500 mt-0.5">{t('totalGames', { count: tm.games })}</div>
                   </div>
@@ -846,7 +846,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
               {teammateStats.length === 0 && (
                 <div className="text-xs text-gray-500 text-center py-8">
-                  最近 20 场对局中没有同队合作过 2 次及以上的队友
+                  {t('noFrequentTeammates')}
                 </div>
               )}
             </div>
@@ -899,7 +899,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 <div>
                   <div className="text-xs text-gray-400 font-bold">{t('matchCountLong', { count: summaryStats.totalGames })}</div>
                   <div className="text-xs text-gray-300 mt-0.5 whitespace-nowrap">
-                    <span className="text-blue-400 font-bold">{summaryStats.wins}W</span> / <span className="text-red-400 font-bold">{summaryStats.losses}败</span>
+                    <span className="text-blue-400 font-bold">{summaryStats.wins}{t("win")}</span> / <span className="text-red-400 font-bold">{summaryStats.losses}{t("loss")}</span>
                   </div>
                 </div>
               </div>
@@ -914,7 +914,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   <span className="text-[9px] text-gray-400 ml-1">KDA</span>
                 </div>
                 <div className="text-[10px] text-red-400/80 font-bold mt-0.5">
-                  击杀参与率 {summaryStats.avgKp}%
+                  {t('killParticipation', { rate: summaryStats.avgKp })}
                 </div>
               </div>
 
@@ -940,13 +940,13 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         )}>
                           {c.winRate}%
                         </span>
-                        <span className="text-gray-500 font-normal truncate text-[9px] sm:inline hidden">({c.wins}胜{c.losses}败)</span>
+                        <span className="text-gray-500 font-normal truncate text-[9px] sm:inline hidden">({t('winsLossesShortNoSpace', { wins: c.wins, losses: c.losses })})</span>
                       </div>
                       <span className="text-gray-400 font-mono text-[10px] font-semibold shrink-0">{c.kda} KDA</span>
                     </div>
                   ))}
                   {summaryStats.topChamps.length === 0 && (
-                    <div className="text-xs text-gray-500 text-center py-2">无英雄数据</div>
+                    <div className="text-xs text-gray-500 text-center py-2">{t("noRecentChampions")}</div>
                   )}
                 </div>
               </div>
@@ -970,7 +970,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         </div>
                         <span className="text-[8px] text-gray-500 mt-1 font-bold">{label}</span>
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-gray-950 border border-gray-800 text-[8px] text-gray-200 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl">
-                          {count}场 ({Math.round(percent)}%)
+                          {t('matchCount', { count })} ({Math.round(percent)}%)
                         </div>
                       </div>
                     );
@@ -981,7 +981,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
             </div>
           ) : (
             <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-8 text-center text-gray-500 text-sm">
-              此分类下近 10 场没有相关的比赛记录
+              {t('noMatchesFound')}
             </div>
           )}
 
@@ -1018,13 +1018,13 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         "text-[9px] font-bold px-1.5 py-0.5 rounded border leading-tight",
                         getQueueStyle(match.queueId)
                       )}>
-                        {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueName === '斗魂竞技场' ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
+                        {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
                       </span>
                       <span className={cn(
                         "text-xs font-bold sm:text-sm",
                         match.win ? "text-blue-400" : "text-red-400"
                       )}>
-                        {match.win ? t('victory') : '失败'}
+                        {match.win ? t('victory') : t('defeat')}
                       </span>
                       <div className="text-[9px] text-gray-500 leading-none mt-0.5">
                         {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
@@ -1126,7 +1126,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           "text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm leading-none",
                           getMultikillStyle(match.multikill)
                         )}>
-                          {match.multikill === '五杀' ? t('multikills.Penta Kill') : match.multikill === '四杀' ? t('multikills.Quadra Kill') : match.multikill === '三杀' ? t('multikills.Triple Kill') : match.multikill === '双杀' ? t('multikills.Double Kill') : match.multikill}
+                          {match.multikill === 'Penta Kill' ? t('multikills.Penta Kill') : match.multikill === 'Quadra Kill' ? t('multikills.Quadra Kill') : match.multikill === 'Triple Kill' ? t('multikills.Triple Kill') : match.multikill === 'Double Kill' ? t('multikills.Double Kill') : match.multikill}
                         </span>
                       )}
                       {match.isMVP && (
@@ -1177,7 +1177,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
                       <div className="flex items-center gap-2">
                         <span className="text-[9px] text-gray-400 font-bold bg-gray-800/50 px-1 py-0.5 rounded leading-none">
-                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueName === '斗魂竞技场' ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
+                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
                         </span>
                         <span className="font-bold text-gray-200">
                           {getRelativeTime(match.gameCreation, t)}
@@ -1302,10 +1302,10 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                 {isLoadingMore ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>正在加载更多历史对局...</span>
+                    <span>{t('loadingMoreMatches')}</span>
                   </>
                 ) : (
-                  <span>展示更多对局 (+20场)</span>
+                  <span>{t('loadMoreMatches')}</span>
                 )}
               </button>
             )}
