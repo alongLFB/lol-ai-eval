@@ -11,13 +11,16 @@ A Next.js application that integrates the **Riot Games API** and **Large Languag
 ### 🌟 Key Features
 
 *   **🔮 AI Oracle Evaluation**: Uses an LLM to generate memes roasting or praising players' recent performance based on their match statistics.
+*   **🌐 Internationalization (i18n)**: Seamlessly toggle between English and Chinese. UI elements, champions, items, queue types, and ranks are fully localized.
 *   **🎮 OP.GG-Style Match History**:
     *   **Game Type Identification**: Visually categorizes matches (Ranked Solo/Duo, Ranked Flex, ARAM, Normal Draft, etc.) with custom-themed labels.
     *   **Detailed Stats**: Displays K/D/A, KDA Ratio, Kill Participation, Creep Score (CS & CS/min), and Vision Score.
-    *   **Full Build & Loadouts**: Shows summoner spells, primary/secondary runes, six item slots, and trinkets.
-    *   **Achievements & Badges**: Identifies multikills (Double Kill up to Pentakill) and awards **MVP/ACE** titles based on performance metrics.
+    *   **Full Build & Loadouts (8-Slot System)**: Shows summoner spells, primary/secondary runes, six item slots, trinket, and natively supports the 8th slot for quest rewards/special enchantments.
+    *   **Achievements & Badges**: Identifies multikills (Double Kill up to Pentakill) and awards **MVP/ACE** titles.
+    *   **👑 Win Streak Tracking**: Intelligently tracks your recent performance and displays a glowing Crown badge for active win streaks (≥ 3 wins), ignoring Remakes.
 *   **📊 Expandable Match Details (No Extra API Cost)**:
     *   Clicking a match opens a detailed list of all 10 participants.
+    *   **Responsive Elastic Layout**: Optimized for both mobile and desktop. Intelligent CSS grid wrapping for seamless transitions without messy overflow scrollbars.
     *   Displays champion level, item builds, spells, KDA, CS, and damage dealt to champions (visualized with relative damage bars).
     *   **Smart Lobby Rank Detection**: On expansion, the app asynchronously loads the ranks of all 10 players to display individual ranks and calculate the average lobby rank.
 *   **📸 Shareable Poster Card**: Generate a high-resolution PNG image of the AI Oracle evaluation and recent match history card with a single click, ready for social sharing.
@@ -82,16 +85,19 @@ Under your GitHub Repository **Settings** -> **Secrets and variables** -> **Acti
 ### 🌟 功能特性
 
 *   **🔮 水晶枢纽 AI 裁决**：根据玩家近期的战绩数据，由 AI 生成毒舌嘲讽或热血赞美的大字报评价。
+*   **🌐 多语言与国际化 (i18n)**：原生支持一键切换中文/英文，从基础 UI 到英雄、段位、装备及模式名称全盘本地化。
 *   **🎮 OP.GG 风格对战历史**：
     *   **对局类型标记**：区分单双排、灵活组排、大乱斗、匹配等模式，提供彩色标签。
     *   **详细战绩数据**：展示 K/D/A、KDA 比率、击杀参与率、CS（补刀数与分均补刀）、视野得分。
-    *   **装备与配置**：展示召唤师技能、主副系符文、六格装备和饰品。
+    *   **完美还原 8 槽位装备栏**：除了召唤师技能、主副系符文、核心 6 神装与饰品眼，全面支持第 8 个独立奖励槽位展示。
     *   **成就徽章**：自动标记多杀情况（双杀至五杀），并基于算法授予队伍 **MVP/ACE** 勋章。
+    *   **👑 专属连胜皇冠**：自动追踪并计算最近战绩的连胜场次，达到 3 连胜及以上时展示炫酷的流光连胜徽章（智能排除提前重开局）。
 *   **📊 可展开的对战详情（极低 API 消耗）**：
     *   点击任意对战行即可展开查看双方队伍 10 位玩家的完整信息。
+    *   **极致的响应式弹性布局**：全自动适应移动端和桌面大屏，智能动态折叠/平铺装备栏网格，彻底告别臃肿的横向滚动条。
     *   展示英雄等级、出装、技能、KDA、CS、对英雄造成的伤害（带有直观的伤害进度条）。
     *   **智能大厅段位检测**：点击展开时，异步并行拉取 10 位玩家的实时段位，计算并显示该场对局的**平均段位**及个人的段位等级。
-*   **📸 战绩大字报分享**：一键生成高清晰度 PNG 分享图，包含 AI 裁决与精美战绩，方便分享至社交平台。
+*   **📸 战绩大字报分享**：一键生成高清晰度 PNG 分享长图，包含 AI 裁决与精美战绩，方便炫耀分享至社交平台。
 *   **⚡ 自动化部署 CI/CD**：内置 GitHub Actions 工作流，支持代码推送至 `master` 分支后自动通过 PM2 部署至云服务器。
 
 ---

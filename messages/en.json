@@ -125,7 +125,8 @@
     "aiAnalyzeMatch": "AI Review Match",
     "analyzingMatch": "AI is generating review...",
     "aiReviewTitle": "AI Match Review",
-    "shareReview": "Save & Share"
+    "shareReview": "Save & Share",
+    "winStreak": "Win Streak"
   },
   "switchLanguage": "Switch to Chinese"
 }

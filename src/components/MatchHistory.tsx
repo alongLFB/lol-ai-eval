@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRankInfo } from '@/lib/riot';
 import { cn } from '@/lib/utils';
-import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users, Download } from 'lucide-react';
+import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users, Download, Crown } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -465,6 +465,16 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
     }
   };
 
+  const winStreak = useMemo(() => {
+    let streak = 0;
+    for (const m of matches) {
+      if (m.gameDuration < 240) continue; // Skip remakes
+      if (m.win) streak++;
+      else break;
+    }
+    return streak;
+  }, [matches]);
+
   const filteredMatches = useMemo(() => {
     return matches.filter(m => {
       if (activeTab === 'SOLO') return m.queueId === 420;
@@ -711,8 +721,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         </div>
 
         <div className="flex-1 text-center md:text-left z-10">
-          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-            {profile.gameName} <span className="text-gray-500 text-xl font-normal">#{profile.tagLine}</span>
+          <h2 className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+            <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              {profile.gameName} <span className="text-gray-500 text-xl font-normal">#{profile.tagLine}</span>
+            </span>
+            {winStreak >= 3 && (
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]" title={`${winStreak} Win Streak`}>
+                <Crown className="w-4 h-4 text-yellow-400 animate-pulse" />
+                <span className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
+                  {winStreak} {t('winStreak')}
+                </span>
+              </div>
+            )}
           </h2>
           <div className="mt-2 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1.5 text-sm text-gray-400">
             <span className="flex items-center gap-1">

@@ -125,7 +125,8 @@
     "aiAnalyzeMatch": "AI复盘本局",
     "analyzingMatch": "AI正在生成复盘...",
     "aiReviewTitle": "AI 战局复盘",
-    "shareReview": "生成复盘长图"
+    "shareReview": "生成复盘长图",
+    "winStreak": "连胜"
   },
   "switchLanguage": "切换到英文"
 }
