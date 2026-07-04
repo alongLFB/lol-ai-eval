@@ -59,6 +59,18 @@ const KEYSTONE_ICONS: Record<number, string> = {
   8465: 'perk-images/Styles/Resolve/Guardian/Guardian.png',
 };
 
+function getItemOrderClasses(index: number, breakpoint: 'md' | 'lg' = 'md') {
+  switch (index) {
+    case 0: return `order-1 ${breakpoint}:order-1`;
+    case 1: return `order-2 ${breakpoint}:order-2`;
+    case 2: return `order-3 ${breakpoint}:order-3`;
+    case 3: return `order-5 ${breakpoint}:order-4`;
+    case 4: return `order-6 ${breakpoint}:order-5`;
+    case 5: return `order-7 ${breakpoint}:order-6`;
+    default: return '';
+  }
+}
+
 function getRuneIconUrl(runeId: number, isKeystone: boolean): string {
   if (isKeystone && KEYSTONE_ICONS[runeId]) {
     return `https://ddragon.leagueoflegends.com/cdn/img/${KEYSTONE_ICONS[runeId]}`;
@@ -172,17 +184,18 @@ function MatchDetailPanel({
   const renderTeamTable = (team: EnrichedParticipant[], teamLabel: string, won: boolean) => (
     <div className="w-full">
       <div className={cn(
-        "flex items-center justify-between px-4 py-2 rounded-t-lg text-sm font-bold",
+        "flex items-center px-4 py-2 rounded-t-lg text-sm font-bold gap-4",
         won ? "bg-blue-900/40 text-blue-300" : "bg-red-900/40 text-red-300"
       )}>
-        <span>{won ? t('victory') : t('defeat')} ({teamLabel})</span>
-        <div className="flex items-center gap-6 text-xs text-gray-400 font-normal font-mono shrink-0">
-          <span className="w-14 text-center shrink-0">{t('rank')}</span>
+        <div className="w-[180px] shrink-0">
+          <span>{won ? t('victory') : t('defeat')} ({teamLabel})</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-400 font-normal font-mono shrink-0">
           <span className="w-16 text-center shrink-0">KDA</span>
           <span className="w-16 text-center shrink-0">{t('damage')}</span>
           <span className="w-12 text-center shrink-0">CS</span>
           <span className="w-12 text-center shrink-0">{t('vision')}</span>
-          <span className="w-[190px] text-center font-sans shrink-0">{t('items')}</span>
+          <span className="w-[104px] md:w-[210px] text-center font-sans shrink-0">{t('items')}</span>
         </div>
       </div>
       <div className={cn(
@@ -194,11 +207,11 @@ function MatchDetailPanel({
           const pRank = rankData?.ranks[p.puuid];
           return (
             <div key={p.puuid + idx} className={cn(
-              "flex items-center justify-between px-4 py-2.5 transition-colors",
+              "flex items-center px-4 py-2.5 transition-colors gap-4",
               isMe ? (won ? "bg-blue-900/25" : "bg-red-900/25") : "bg-gray-900/50",
               idx < team.length - 1 && "border-b border-gray-800/50"
             )}>
-              <div className="flex items-center gap-2 min-w-[170px] shrink-0">
+              <div className="flex items-center gap-2 w-[180px] shrink-0">
                 <div className="relative w-8 h-8 rounded-md overflow-hidden border border-gray-700 shrink-0">
                   <img
                     crossOrigin="anonymous"
@@ -215,26 +228,28 @@ function MatchDetailPanel({
                   <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner1Id, patch)} alt="" className="w-4 h-4 rounded-sm" />
                   <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner2Id, patch)} alt="" className="w-4 h-4 rounded-sm" />
                 </div>
-                <span className={cn(
-                  "text-xs truncate max-w-[95px] shrink-0",
-                  isMe ? "text-white font-bold" : "text-gray-300"
-                )}>
-                  {p.playerName || p.championName}
-                </span>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className={cn(
+                    "text-xs truncate w-full",
+                    isMe ? "text-white font-bold" : "text-gray-300"
+                  )}>
+                    {p.playerName || p.championName}
+                  </span>
+                  <div className="h-[14px] flex items-center mt-0.5">
+                    {rankData?.loading ? (
+                      <Loader2 className="w-2.5 h-2.5 animate-spin text-gray-500" />
+                    ) : pRank ? (
+                      <span className={cn("text-[10px] font-bold truncate", getTierColor(pRank.tier))}>
+                        {formatTierShort(pRank.tier, pRank.rank)}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-600">-</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-6 shrink-0">
-                <div className="w-14 text-center shrink-0">
-                  {rankData?.loading ? (
-                    <Loader2 className="w-3 h-3 animate-spin text-gray-500 mx-auto" />
-                  ) : pRank ? (
-                    <span className={cn("text-[10px] font-bold", getTierColor(pRank.tier))}>
-                      {formatTierShort(pRank.tier, pRank.rank)}
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-gray-600">-</span>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 shrink-0">
                 <div className="w-16 text-center shrink-0">
                   <span className="text-xs text-gray-200 font-mono">
                     {p.kills}/{p.deaths}/{p.assists}
@@ -257,9 +272,9 @@ function MatchDetailPanel({
                 <div className="w-12 text-center text-xs text-gray-400 font-mono shrink-0">
                   {p.visionScore}
                 </div>
-                <div className="flex gap-0.5 w-[190px] justify-center shrink-0">
+                <div className="grid grid-cols-4 md:grid-cols-8 gap-0.5 w-[104px] md:w-[210px] justify-items-center shrink-0">
                   {p.items.slice(0, 6).map((itemId, i) => (
-                    <div key={i} className="w-6 h-6 rounded-sm overflow-hidden bg-gray-800 border border-gray-700/50 shrink-0">
+                    <div key={i} className={cn("w-6 h-6 rounded-sm overflow-hidden bg-gray-800 border border-gray-700/50 shrink-0", getItemOrderClasses(i, 'md'))}>
                       {itemId > 0 ? (
                         <img
                           crossOrigin="anonymous"
@@ -270,11 +285,21 @@ function MatchDetailPanel({
                       ) : null}
                     </div>
                   ))}
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50 ml-1 shrink-0">
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50 shrink-0 order-4 md:order-7">
                     {(p.items[6] || 0) > 0 ? (
                       <img
                         crossOrigin="anonymous"
                         src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/item/${p.items[6]}.png`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700/50 shrink-0 order-8 md:order-8">
+                    {(p.items[7] || 0) > 0 ? (
+                      <img
+                        crossOrigin="anonymous"
+                        src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/item/${p.items[7]}.png`}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -312,7 +337,7 @@ function MatchDetailPanel({
           </div>
         )}
         <div className="w-full overflow-x-auto select-none pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-          <div className="min-w-[800px] space-y-4">
+          <div className="min-w-[560px] space-y-4">
             {renderTeamTable(blueTeam, t('blueTeam'), blueWon)}
             {renderTeamTable(redTeam, t('redTeam'), !blueWon)}
           </div>
@@ -363,14 +388,14 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
     try {
       const element = document.getElementById(`match-card-${matchId}`);
       if (!element) return;
-      
+
       const dataUrl = await htmlToImage.toPng(element, {
         backgroundColor: '#0a0a0a',
         style: {
           borderRadius: '0px'
         }
       });
-      
+
       const link = document.createElement('a');
       link.download = `match-review-${matchId}.png`;
       link.href = dataUrl;
@@ -520,15 +545,15 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
   const teammateStats = useMemo(() => {
     const teammates: Record<string, { puuid: string; playerName: string; playerTag: string; summonerLevel: number; lastChampion: string; wins: number; losses: number; games: number }> = {};
-    
+
     matches.forEach(m => {
       const myParticipant = m.allParticipants.find(p => p.puuid === currentPuuid);
       if (!myParticipant) return;
       const myTeamId = myParticipant.teamId;
-      
+
       m.allParticipants.forEach(p => {
         if (p.puuid === currentPuuid || p.teamId !== myTeamId) return;
-        
+
         const key = `${p.playerName}#${p.playerTag}`;
         if (!teammates[key]) {
           teammates[key] = {
@@ -542,7 +567,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
             games: 0
           };
         }
-        
+
         const tm = teammates[key];
         tm.games++;
         if (m.win) tm.wins++;
@@ -599,7 +624,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
     })();
 
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teammateStats, server]);
 
   const displayedTeammates = useMemo(() => {
@@ -671,18 +696,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         </div>
 
         <div className="relative w-24 h-24 rounded-full border-2 border-blue-500 overflow-hidden shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-           <img
-             crossOrigin="anonymous"
-             src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/${profile.profileIconId || 1}.png`}
-             alt="Profile Icon"
-             className="w-full h-full object-cover"
-             onError={(e) => {
-               (e.target as HTMLImageElement).src = `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/1.png`;
-             }}
-           />
-           <div className="absolute bottom-0 inset-x-0 bg-black/60 text-center text-xs font-bold py-1">
-             Lv {profile.summonerLevel}
-           </div>
+          <img
+            crossOrigin="anonymous"
+            src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/${profile.profileIconId || 1}.png`}
+            alt="Profile Icon"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/profileicon/1.png`;
+            }}
+          />
+          <div className="absolute bottom-0 inset-x-0 bg-black/60 text-center text-xs font-bold py-1">
+            Lv {profile.summonerLevel}
+          </div>
         </div>
 
         <div className="flex-1 text-center md:text-left z-10">
@@ -691,13 +716,13 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
           </h2>
           <div className="mt-2 flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1.5 text-sm text-gray-400">
             <span className="flex items-center gap-1">
-              <Trophy className="w-4 h-4 text-yellow-500"/> 
+              <Trophy className="w-4 h-4 text-yellow-500" />
               {profile.tier} {profile.rank} {profile.leaguePoints > 0 ? `(${profile.leaguePoints} LP)` : ''}
             </span>
-            <span className="flex items-center gap-1"><Target className="w-4 h-4 text-blue-400"/> {t('winsLossesShortNoSpace', { wins: profile.wins, losses: profile.losses })}</span>
-            <span className="flex items-center gap-1"><Swords className="w-4 h-4 text-red-400"/> {t('winRate')} {profile.winRate}%</span>
+            <span className="flex items-center gap-1"><Target className="w-4 h-4 text-blue-400" /> {t('winsLossesShortNoSpace', { wins: profile.wins, losses: profile.losses })}</span>
+            <span className="flex items-center gap-1"><Swords className="w-4 h-4 text-red-400" /> {t('winRate')} {profile.winRate}%</span>
           </div>
-          
+
           {profile.ladderRank && profile.ladderPercent !== 'N/A' && (
             <div className="mt-2 text-xs text-gray-400 font-medium flex items-center justify-center md:justify-start gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse mr-1"></span>
@@ -713,7 +738,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
           <Trophy className="w-4 h-4 text-yellow-500" />
           <h4 className="text-sm font-bold text-gray-200">{t('rankedSectionTitle')}</h4>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Solo Queue Rank Card */}
           <div className="flex items-center gap-3.5 p-3 bg-gray-950/40 rounded-lg border border-gray-800/40 hover:border-gray-700/40 transition-colors">
@@ -787,17 +812,17 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
       {/* OP.GG Layout Grid - Responsive columns at different width levels */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        
+
         {/* LEFT COLUMN: Sidebar (Rank Cards & Teammates) - Stacks on mobile/tablet below matches */}
         <div className="xl:col-span-4 space-y-4 w-full order-2 xl:order-1">
-          
+
           {/* Rank Cards (Solo & Flex) */}
           <div className="hidden xl:block bg-gray-900/70 border border-gray-800 rounded-xl p-4 shadow-lg backdrop-blur-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
               <Trophy className="w-4 h-4 text-yellow-500" />
               <h4 className="text-sm font-bold text-gray-200">{t('rankedSectionTitle')}</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
               {/* Solo Queue Rank Card */}
               <div className="flex items-center gap-3.5 p-3 bg-gray-950/40 rounded-lg border border-gray-800/40 hover:border-gray-700/40 transition-colors">
@@ -856,7 +881,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
             <div className="divide-y divide-gray-800/40 max-h-[480px] overflow-y-auto pr-1">
               {displayedTeammates.map((tm) => (
                 <div key={`${tm.playerName}#${tm.playerTag}`} className="flex items-center justify-between py-2.5">
-                  
+
                   {/* Left: Player Profile Avatar (Circle) & Player Name / Level Info */}
                   <div className="flex items-center gap-2.5 min-w-0 w-[50%]">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-800 border border-gray-700/60 shrink-0">
@@ -928,11 +953,11 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
         {/* RIGHT COLUMN: Matches Summary & List - Stacks at the top on mobile/tablet */}
         <div className="xl:col-span-8 space-y-4 w-full min-w-0 order-1 xl:order-2">
-          
+
           {/* Recent Matches Summary Bar */}
           {summaryStats ? (
             <div className="bg-gray-900/70 border border-gray-800 rounded-xl p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 shadow-lg backdrop-blur-sm">
-              
+
               {/* Donut Chart */}
               <div className="flex items-center gap-4 justify-center sm:justify-start">
                 <div className="relative w-16 h-16 shrink-0">
@@ -1083,101 +1108,102 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
                     <div className="flex flex-1 items-center justify-between gap-3 py-3 pl-4 pr-3 overflow-hidden min-h-[96px]">
                       <div className="flex items-center gap-4">
-                      {/* 1. Game mode + outcome (w-[100px]) */}
-                      <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
-                        <span className={cn(
-                          "text-xs font-bold leading-tight",
-                          getQueueStyle(match.queueId)
-                        )}>
-                          {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
-                        </span>
-                        <span className="text-[10px] text-gray-500 mb-0.5">
-                          {getRelativeTime(match.gameCreation, t)}
-                        </span>
-                        <div className="w-6 h-px bg-gray-700 my-0.5"></div>
-                        <span className={cn(
-                          "text-xs font-bold mt-0.5",
-                          match.win ? "text-blue-400" : "text-red-400"
-                        )}>
-                          {match.win ? t('victory') : t('defeat')}
-                        </span>
-                        <div className="text-[10px] text-gray-500 leading-none mt-0.5">
-                          {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
-                        </div>
-                      </div>
-
-                      {/* 2. Champion + Spells + Runes (w-[100px]) */}
-                      <div className="flex items-center gap-1 w-[100px] shrink-0">
-                        <div className="relative w-11 h-11 rounded-full overflow-hidden border border-gray-700 shrink-0">
-                          <img
-                            crossOrigin="anonymous"
-                            src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
-                            alt={match.championName}
-                            className="w-full h-full object-cover transform scale-110"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
-                            }}
-                          />
-                          <span className="absolute bottom-0 right-0 text-[9px] bg-gray-900 text-gray-200 w-4 h-4 flex items-center justify-center rounded-full font-bold border border-gray-700 scale-90 origin-bottom-right">
-                            {match.champLevel}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5 ml-0.5 shrink-0">
-                          <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
-                          <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
-                        </div>
-                        <div className="flex flex-col gap-0.5 shrink-0">
-                          <img
-                            crossOrigin="anonymous"
-                            src={getRuneIconUrl(match.primaryRuneId, true)}
-                            alt=""
-                            className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800"
-                          />
-                          <img
-                            crossOrigin="anonymous"
-                            src={getRuneIconUrl(match.subStyleId, false)}
-                            alt=""
-                            className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800 p-0.5 opacity-80"
-                          />
-                        </div>
-                      </div>
-
-                      {/* 3. KDA block (w-[110px]) */}
-                      <div className="flex flex-col items-start w-[110px] shrink-0">
-                        <span className="text-gray-100 font-bold text-sm tracking-normal font-mono truncate w-full">
-                          {match.kills} <span className="text-gray-500 font-normal mx-0.5">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-gray-500 font-normal mx-0.5">/</span> {match.assists}
-                        </span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
+                        {/* 1. Game mode + outcome (w-[100px]) */}
+                        <div className="flex flex-col items-start gap-0.5 w-[100px] shrink-0">
                           <span className={cn(
-                            "text-[10px] font-medium font-mono",
-                            kda === 'Perfect' ? 'text-yellow-400' :
-                              parseFloat(kda) >= 5 ? 'text-orange-400' :
-                                parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
+                            "text-xs font-bold leading-tight",
+                            getQueueStyle(match.queueId)
                           )}>
-                            {kda}:1 KDA
+                            {match.queueId === 420 ? t('queues.RANKED_SOLO_5x5') : match.queueId === 440 ? t('queues.RANKED_FLEX_SR') : match.queueId === 450 ? t('queues.ARAM') : match.queueId === 1700 || match.queueId === 1710 ? t('queues.CHERRY') : match.queueId === 400 || match.queueId === 430 ? t('queues.NORMAL') : t('queues.UNKNOWN')}
+                          </span>
+                          <span className="text-[10px] text-gray-500 mb-0.5">
+                            {getRelativeTime(match.gameCreation, t)}
+                          </span>
+                          <div className="w-6 h-px bg-gray-700 my-0.5"></div>
+                          <span className={cn(
+                            "text-xs font-bold mt-0.5",
+                            match.win ? "text-blue-400" : "text-red-400"
+                          )}>
+                            {match.win ? t('victory') : t('defeat')}
+                          </span>
+                          <div className="text-[10px] text-gray-500 leading-none mt-0.5">
+                            {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
+                          </div>
+                        </div>
+
+                        {/* 2. Champion + Spells + Runes (w-[100px]) */}
+                        <div className="flex items-center gap-1 w-[100px] shrink-0">
+                          <div className="relative w-11 h-11 rounded-full overflow-hidden border border-gray-700 shrink-0">
+                            <img
+                              crossOrigin="anonymous"
+                              src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/champion/${match.championName}.png`}
+                              alt={match.championName}
+                              className="w-full h-full object-cover transform scale-110"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
+                              }}
+                            />
+                            <span className="absolute bottom-0 right-0 text-[9px] bg-gray-900 text-gray-200 w-4 h-4 flex items-center justify-center rounded-full font-bold border border-gray-700 scale-90 origin-bottom-right">
+                              {match.champLevel}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-0.5 ml-0.5 shrink-0">
+                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner1Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
+                            <img crossOrigin="anonymous" src={getSummonerSpellUrl(match.summoner2Id, latestPatch)} alt="" className="w-5 h-5 rounded-sm" />
+                          </div>
+                          <div className="flex flex-col gap-0.5 shrink-0">
+                            <img
+                              crossOrigin="anonymous"
+                              src={getRuneIconUrl(match.primaryRuneId, true)}
+                              alt=""
+                              className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800"
+                            />
+                            <img
+                              crossOrigin="anonymous"
+                              src={getRuneIconUrl(match.subStyleId, false)}
+                              alt=""
+                              className="w-5 h-5 rounded-full bg-gray-900 border border-gray-800 p-0.5 opacity-80"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 3. KDA block (w-[110px]) */}
+                        <div className="flex flex-col items-start w-[110px] shrink-0">
+                          <span className="text-gray-100 font-bold text-sm tracking-normal font-mono truncate w-full">
+                            {match.kills} <span className="text-gray-500 font-normal mx-0.5">/</span> <span className="text-red-400">{match.deaths}</span> <span className="text-gray-500 font-normal mx-0.5">/</span> {match.assists}
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={cn(
+                              "text-[10px] font-medium font-mono",
+                              kda === 'Perfect' ? 'text-yellow-400' :
+                                parseFloat(kda) >= 5 ? 'text-orange-400' :
+                                  parseFloat(kda) >= 3 ? 'text-green-400' : 'text-gray-400'
+                            )}>
+                              {kda}:1 KDA
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 4. Stats: P/Kill, CS, Rank (w-[100px]) */}
+                        <div className="flex flex-col items-start justify-center w-[100px] border-l border-gray-800/60 pl-3 shrink-0">
+                          <span className="text-[10px] text-gray-400 truncate w-full">
+                            P/Kill <span className="text-gray-200 font-bold">{kpPercent}%</span>
+                          </span>
+                          <span className="text-[10px] text-gray-400 mt-0.5 truncate w-full">
+                            CS {match.cs} ({match.csPerMin})
                           </span>
                         </div>
-                      </div>
-
-                      {/* 4. Stats: P/Kill, CS, Rank (w-[100px]) */}
-                      <div className="flex flex-col items-start justify-center w-[100px] border-l border-gray-800/60 pl-3 shrink-0">
-                        <span className="text-[10px] text-gray-400 truncate w-full">
-                          P/Kill <span className="text-gray-200 font-bold">{kpPercent}%</span>
-                        </span>
-                        <span className="text-[10px] text-gray-400 mt-0.5 truncate w-full">
-                          CS {match.cs} ({match.csPerMin})
-                        </span>
-                      </div>
                       </div>
 
                       {/* 5. Items row & Badges (flex-1 flex overflow-hidden) */}
                       <div className="flex items-center justify-end gap-3 shrink-0 min-w-0 flex-1 pl-2">
                         {/* Items */}
-                        <div className="flex items-center gap-0.5 shrink-0">
+                        <div className="grid grid-cols-4 lg:grid-cols-8 gap-0.5 w-[104px] lg:w-[210px] shrink-0 justify-items-center">
                           {match.items.slice(0, 6).map((itemId, i) => (
                             <div key={i} className={cn(
-                              "w-6 h-6 rounded overflow-hidden",
-                              itemId > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
+                              "w-6 h-6 rounded overflow-hidden shrink-0",
+                              itemId > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40",
+                              getItemOrderClasses(i, 'lg')
                             )}>
                               {itemId > 0 ? (
                                 <img
@@ -1190,16 +1216,29 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                             </div>
                           ))}
                           <div className={cn(
-                            "w-6 h-6 rounded-full overflow-hidden ml-0.5 shrink-0",
+                            "w-6 h-6 rounded-full overflow-hidden shrink-0 order-4 lg:order-7",
                             (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
                           )}>
                             {(match.items[6] || 0) > 0 ? (
-                                <img
-                                  crossOrigin="anonymous"
-                                  src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
+                              <img
+                                crossOrigin="anonymous"
+                                src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            ) : null}
+                          </div>
+                          <div className={cn(
+                            "w-6 h-6 rounded-full overflow-hidden shrink-0 order-8 lg:order-8",
+                            (match.items[7] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
+                          )}>
+                            {(match.items[7] || 0) > 0 ? (
+                              <img
+                                crossOrigin="anonymous"
+                                src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[7]}.png`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
                             ) : null}
                           </div>
                         </div>
@@ -1228,8 +1267,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         disabled={analyzingMatchId === match.matchId}
                         className={cn(
                           "w-7 h-7 flex items-center justify-center rounded-md border transition-colors cursor-pointer disabled:opacity-50",
-                          match.win 
-                            ? "border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20" 
+                          match.win
+                            ? "border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
                             : "border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
                         )}
                         title={t('aiAnalyzeMatch')}
@@ -1238,8 +1277,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       </button>
                       <div className={cn(
                         "w-7 h-7 flex items-center justify-center rounded-md border transition-colors",
-                        match.win 
-                          ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20" 
+                        match.win
+                          ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
                           : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
                       )}>
                         <ChevronDown className={cn(
@@ -1260,8 +1299,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     {/* Top Bar (OPGG style) */}
                     <div className={cn(
                       "flex items-center justify-between px-3 py-1.5 border-b",
-                      match.win 
-                        ? "bg-blue-900/20 border-blue-900/30" 
+                      match.win
+                        ? "bg-blue-900/20 border-blue-900/30"
                         : "bg-red-900/20 border-red-900/30"
                     )}>
                       <div className="flex items-center gap-2">
@@ -1288,8 +1327,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                             disabled={analyzingMatchId === match.matchId}
                             className={cn(
                               "w-6 h-6 flex items-center justify-center rounded border",
-                              match.win 
-                                ? "border-purple-500/30 bg-purple-500/10 text-purple-400" 
+                              match.win
+                                ? "border-purple-500/30 bg-purple-500/10 text-purple-400"
                                 : "border-purple-500/30 bg-purple-500/10 text-purple-400"
                             )}
                             title={t('aiAnalyzeMatch')}
@@ -1298,8 +1337,8 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           </button>
                           <div className={cn(
                             "w-6 h-6 flex items-center justify-center rounded border",
-                            match.win 
-                              ? "border-blue-500/30 bg-blue-500/10 text-blue-400" 
+                            match.win
+                              ? "border-blue-500/30 bg-blue-500/10 text-blue-400"
                               : "border-red-500/30 bg-red-500/10 text-red-400"
                           )}>
                             <ChevronDown className={cn(
@@ -1385,7 +1424,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                         </div>
 
                         <div className="flex flex-col gap-1 items-end shrink-0 ml-2">
-                           {match.multikill && (
+                          {match.multikill && (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white leading-none shadow-sm whitespace-nowrap">
                               {match.multikill === 'Penta Kill' ? t('multikills.Penta Kill') : match.multikill === 'Quadra Kill' ? t('multikills.Quadra Kill') : match.multikill === 'Triple Kill' ? t('multikills.Triple Kill') : match.multikill === 'Double Kill' ? t('multikills.Double Kill') : match.multikill}
                             </span>
