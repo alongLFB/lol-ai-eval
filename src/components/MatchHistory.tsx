@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRankInfo } from '@/lib/riot';
 import { cn } from '@/lib/utils';
-import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users } from 'lucide-react';
+import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users, Download } from 'lucide-react';
+import * as htmlToImage from 'html-to-image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 
@@ -347,12 +348,38 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
       if (data.evaluation) {
         setMatchAnalysisResults(prev => ({ ...prev, [match.matchId]: data.evaluation }));
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error('Failed to generate AI review:', error);
+      setMatchAnalysisResults(prev => ({
+        ...prev,
+        [match.matchId]: t('aiReviewFailed') || 'Failed to generate review.'
+      }));
     } finally {
       setAnalyzingMatchId(null);
     }
   };
+
+  const handleShareReview = useCallback(async (matchId: string) => {
+    try {
+      const element = document.getElementById(`match-card-${matchId}`);
+      if (!element) return;
+      
+      const dataUrl = await htmlToImage.toPng(element, {
+        backgroundColor: '#0a0a0a',
+        style: {
+          borderRadius: '0px'
+        }
+      });
+      
+      const link = document.createElement('a');
+      link.download = `match-review-${matchId}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to generate image', err);
+    }
+  }, []);
+
   const [rankCache, setRankCache] = useState<Record<string, MatchRankData>>({});
   const [showAllTeammates, setShowAllTeammates] = useState(false);
   const [activeTab, setActiveTab] = useState<'ALL' | 'SOLO' | 'FLEX' | 'ARAM'>('ALL');
@@ -1030,6 +1057,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
               return (
                 <div
+                  id={`match-card-${match.matchId}`}
                   key={match.matchId}
                   className={cn(
                     "rounded-xl border overflow-hidden transition-all duration-200 relative",
@@ -1383,12 +1411,23 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                                 <Bot className={cn("w-5 h-5 text-purple-400", analyzingMatchId === match.matchId && "animate-pulse")} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-bold text-purple-300 mb-1.5 flex items-center gap-2">
-                                  {t('aiReviewTitle')}
-                                  {analyzingMatchId === match.matchId && (
-                                    <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <h4 className="text-sm font-bold text-purple-300 flex items-center gap-2">
+                                    {t('aiReviewTitle')}
+                                    {analyzingMatchId === match.matchId && (
+                                      <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                                    )}
+                                  </h4>
+                                  {!(analyzingMatchId === match.matchId) && matchAnalysisResults[match.matchId] && (
+                                    <button
+                                      onClick={() => handleShareReview(match.matchId)}
+                                      className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded text-xs transition-colors"
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      <span>{t('shareReview')}</span>
+                                    </button>
                                   )}
-                                </h4>
+                                </div>
                                 {analyzingMatchId === match.matchId ? (
                                   <p className="text-sm text-purple-300/70 animate-pulse">{t('analyzingMatch')}</p>
                                 ) : (
