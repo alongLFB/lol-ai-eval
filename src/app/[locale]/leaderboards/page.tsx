@@ -153,7 +153,7 @@ export default function LeaderboardsPage() {
             {t('serverSummonersInfo', { total: totalSummoners.toLocaleString() })}
           </div>
           <div className="flex items-center gap-3">
-            <span>显示排位在铁牌及以上的召唤师。排行榜会定期 24 小时更新。</span>
+            <span>{t('notice')}</span>
             <button
               onClick={() => loadLeaderboard(currentServer, currentTier, currentPage, true)}
               disabled={isRefreshing || isLoading}
@@ -213,7 +213,7 @@ export default function LeaderboardsPage() {
                 {(stats?.challengerCutoffLP || 2386).toLocaleString()} LP
               </span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 9</span>
-              <span className="text-slate-400">{(stats?.challengerCount || 304).toLocaleString()} 名召唤师</span>
+              <span className="text-slate-400">{t('summonersCount', { count: (stats?.challengerCount || 304).toLocaleString() })}</span>
             </div>
 
             <span className="text-slate-700">|</span>
@@ -225,7 +225,7 @@ export default function LeaderboardsPage() {
                 {(stats?.grandmasterCutoffLP || 1759).toLocaleString()} LP
               </span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 8</span>
-              <span className="text-slate-400">{(stats?.grandmasterCount || 754).toLocaleString()} 名召唤师</span>
+              <span className="text-slate-400">{t('summonersCount', { count: (stats?.grandmasterCount || 754).toLocaleString() })}</span>
             </div>
           </div>
 
@@ -236,7 +236,7 @@ export default function LeaderboardsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`玩家名称 #${currentServer}`}
+              placeholder={t('searchPlaceholder', { server: currentServer })}
               className="w-full bg-slate-950 text-slate-200 text-sm pl-9 pr-9 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-500"
             />
             {searchQuery.length > 0 && (
@@ -245,7 +245,6 @@ export default function LeaderboardsPage() {
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all cursor-pointer"
                 title={t('clearSearch')}
-
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -258,7 +257,7 @@ export default function LeaderboardsPage() {
         {isLoading && (
           <div className="py-24 flex flex-col items-center justify-center space-y-4">
             <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-            <p className="text-slate-400 text-sm font-medium">正在拉取 {currentServer} 服 {t(`tiers.${currentTier}`)} 第 {currentPage} 页排行榜数据...</p>
+            <p className="text-slate-400 text-sm font-medium">{t('loadingData', { server: currentServer, tier: t(`tiers.${currentTier}`), page: currentPage })}</p>
           </div>
         )}
 
@@ -271,10 +270,11 @@ export default function LeaderboardsPage() {
               onClick={() => loadLeaderboard(currentServer, currentTier, currentPage, true)}
               className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
             >
-              重试获取
+              {t('retry')}
             </button>
           </div>
         )}
+
 
         {/* Leaderboard Table (100 rows per page) */}
         {!isLoading && !error && (
@@ -363,9 +363,9 @@ export default function LeaderboardsPage() {
 
                             {/* W / L */}
                             <td className="py-3.5 px-4 text-center font-mono text-xs">
-                              <span className="text-emerald-400 font-semibold">{item.wins}胜</span>
+                              <span className="text-emerald-400 font-semibold">{item.wins}{t('winShort')}</span>
                               <span className="text-slate-600 mx-1">/</span>
-                              <span className="text-rose-400 font-semibold">{item.losses}负</span>
+                              <span className="text-rose-400 font-semibold">{item.losses}{t('lossShort')}</span>
                             </td>
 
                             {/* Win Rate Progress */}
@@ -394,12 +394,12 @@ export default function LeaderboardsPage() {
                               <div className="flex flex-wrap gap-1">
                                 {item.hotStreak && (
                                   <span className="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[10px] font-medium">
-                                    🔥 连胜
+                                    {t('statusLabels.hotStreak')}
                                   </span>
                                 )}
                                 {item.veteran && (
                                   <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-medium">
-                                    👑 资深
+                                    {t('statusLabels.veteran')}
                                   </span>
                                 )}
                               </div>
@@ -427,8 +427,9 @@ export default function LeaderboardsPage() {
             {/* Pagination Controls (OP.GG style bottom bar) */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2 border-t border-slate-800/80 text-xs text-slate-400">
               <div>
-                #{startRank} ~ #{endRank} / 总计 {totalSummoners.toLocaleString()} 召唤师
+                {t('paginationSummary', { start: startRank, end: endRank, total: totalSummoners.toLocaleString() })}
               </div>
+
 
               <div className="flex items-center gap-1.5">
                 <button

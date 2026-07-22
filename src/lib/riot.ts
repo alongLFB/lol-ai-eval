@@ -824,7 +824,7 @@ export async function fetchLeaderboard(
       const url = `https://${platform}.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${upperTier}/I?page=${riotPage}`;
       const data = await fetchRiot(url);
       const list = Array.isArray(data) ? data : [];
-      rawEntries = list.map((e: any) => ({ ...e, tier: upperTier }));
+      rawEntries = list.map((e: any) => ({ ...e, tier: upperTier, rank: e.rank || 'I' }));
       rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
     }
   } catch (e) {
@@ -863,6 +863,9 @@ export async function fetchLeaderboard(
         const total = wins + losses;
         const winRate = total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
 
+        const tierName = entry.tier || normalizedTier.toUpperCase();
+        const displayTier = entry.rank ? `${tierName} ${entry.rank}` : tierName;
+
         return {
           rank: overallRank,
           puuid: entry.puuid || '',
@@ -877,10 +880,11 @@ export async function fetchLeaderboard(
           veteran: !!entry.veteran,
           freshBlood: !!entry.freshBlood,
           inactive: !!entry.inactive,
-          tier: entry.tier || normalizedTier.toUpperCase(),
+          tier: displayTier,
         };
       })
     );
+
 
     enriched.push(...chunkResults);
   }

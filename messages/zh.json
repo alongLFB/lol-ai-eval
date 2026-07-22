@@ -137,11 +137,17 @@
   "Leaderboards": {
     "title": "大区梯队排行榜",
     "subtitle": "查看各大区最顶尖高手的胜点与对局胜率，数据每 24 小时自动更新缓存。",
+    "notice": "显示排位在铁牌及以上的召唤师。排行榜会定期 24 小时更新。",
     "cacheStatus": "数据每 24 小时更新 | 上次更新: {time}",
     "updating": "数据刷新中...",
     "refresh": "强制刷新缓存",
     "cachedNotice": "已显示 24 小时内最新缓存数据",
-    "searchPlaceholder": "在列表中搜索召唤师名称...",
+    "searchPlaceholder": "玩家名称 #{server}",
+    "loadingData": "正在拉取 {server} 服 {tier} 第 {page} 页排行榜数据...",
+    "retry": "重试获取",
+    "summonersCount": "{count} 名召唤师",
+    "winShort": "胜",
+    "lossShort": "负",
     "columns": {
       "rank": "排名",
       "summoner": "召唤师 (Riot ID)",
@@ -166,9 +172,9 @@
       "iron": "坚韧黑铁 (Iron)"
     },
     "statusLabels": {
-      "hotStreak": "🔥 连胜中",
-      "veteran": "👑 榜单常客",
-      "freshBlood": "✨ 新晋星将"
+      "hotStreak": "🔥 连胜",
+      "veteran": "👑 资深",
+      "freshBlood": "✨ 新人"
     },
     "paginationSummary": "#{start} ~ #{end} / 总计 {total} 名召唤师",
     "prevPage": "上一页",

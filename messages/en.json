@@ -137,11 +137,17 @@
   "Leaderboards": {
     "title": "Server Leaderboards",
     "subtitle": "Track top players across servers by LP and win rates. Data is cached and updated every 24 hours.",
+    "notice": "Displaying summoners in Iron tier and above. Leaderboards update every 24 hours.",
     "cacheStatus": "Updated every 24h | Last update: {time}",
     "updating": "Refreshing data...",
     "refresh": "Force Refresh",
     "cachedNotice": "Displaying cached data from the last 24 hours",
-    "searchPlaceholder": "Search summoner in leaderboard...",
+    "searchPlaceholder": "Summoner #{server}",
+    "loadingData": "Fetching {server} server {tier} page {page} leaderboard data...",
+    "retry": "Retry",
+    "summonersCount": "{count} Summoners",
+    "winShort": "W",
+    "lossShort": "L",
     "columns": {
       "rank": "# Rank",
       "summoner": "Summoner (Riot ID)",
