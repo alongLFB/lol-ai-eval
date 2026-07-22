@@ -128,5 +128,52 @@
     "shareReview": "Save & Share",
     "winStreak": "Win Streak"
   },
+  "Navigation": {
+    "home": "Oracle Evaluation",
+    "leaderboards": "Leaderboards"
+  },
+  "Leaderboards": {
+    "title": "Server Leaderboards",
+    "subtitle": "Track top players across servers by LP and win rates. Data is cached and updated every 24 hours.",
+    "cacheStatus": "Updated every 24h | Last update: {time}",
+    "updating": "Refreshing data...",
+    "refresh": "Force Refresh",
+    "cachedNotice": "Displaying cached data from the last 24 hours",
+    "searchPlaceholder": "Search summoner in leaderboard...",
+    "columns": {
+      "rank": "# Rank",
+      "summoner": "Summoner (Riot ID)",
+      "tier": "Tier",
+      "lp": "League Points",
+      "winRate": "Win Rate",
+      "winsLosses": "W / L",
+      "status": "Status",
+      "action": "View Profile"
+    },
+    "tiers": {
+      "all": "All Tiers",
+      "challenger": "Challenger",
+      "grandmaster": "Grandmaster",
+      "master": "Master",
+      "diamond": "Diamond",
+      "emerald": "Emerald",
+      "platinum": "Platinum",
+      "gold": "Gold",
+      "silver": "Silver",
+      "bronze": "Bronze",
+      "iron": "Iron"
+    },
+    "statusLabels": {
+      "hotStreak": "🔥 Hot Streak",
+      "veteran": "👑 Veteran",
+      "freshBlood": "✨ Fresh Blood"
+    },
+    "paginationSummary": "#{start} ~ #{end} / Total {total} Summoners",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "serverSummonersInfo": "There are currently {total} summoners in Summoner's Rift",
+    "viewProfile": "View Profile",
+    "empty": "No leaderboard data available for this tier"
+  },
   "switchLanguage": "Switch to Chinese"
 }

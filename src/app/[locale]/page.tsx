@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { SearchBar } from '@/components/SearchBar';
 import { MatchHistory } from '@/components/MatchHistory';
 import { AIEvaluation } from '@/components/AIEvaluation';
@@ -10,9 +11,10 @@ import { Share2, Loader2, Copy, Check, RefreshCw, Clock } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
-export default function Home() {
+function HomeContent() {
   const t = useTranslations('HomePage');
   const locale = useLocale();
+  const searchParams = useSearchParams();
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +33,21 @@ export default function Home() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentGameName, setCurrentGameName] = useState('');
   const [currentTagLine, setCurrentTagLine] = useState('');
+
+  // Auto search from URL parameters if present
+  useEffect(() => {
+    const summonerParam = searchParams.get('summoner');
+    const serverParam = searchParams.get('server') || 'EUW';
+
+    if (summonerParam) {
+      const parts = summonerParam.split('-');
+      if (parts.length >= 2) {
+        const tagLine = parts.pop()!;
+        const gameName = parts.join('-');
+        handleSearch(gameName, tagLine, serverParam);
+      }
+    }
+  }, [searchParams]);
 
   // Tick the relative time display every 30 seconds
   useEffect(() => {
@@ -203,7 +220,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white overflow-hidden relative selection:bg-purple-500/30">
-      <LanguageSwitcher />
       {/* Background Decor */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-gradient-to-b from-blue-900/20 to-purple-900/10 blur-[100px] rounded-full pointer-events-none" />
       
@@ -302,3 +318,12 @@ export default function Home() {
     </main>
   );
 }
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0c]" />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+

@@ -89,3 +89,91 @@ export function setCachedData(
 
   return lastUpdated;
 }
+
+// ── Leaderboard Cache Configuration ──
+// Cache expires after 24 hours (86,400,000 ms) as per requirement.
+export const LEADERBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+const LEADERBOARD_CACHE_DIR = path.join(process.cwd(), '.cache', 'leaderboards');
+
+export interface CachedLeaderboardData {
+  server: string;
+  tier: string;
+  page: number;
+  entries: any[];
+  stats?: {
+    challengerCutoffLP: number;
+    challengerCount: number;
+    grandmasterCutoffLP: number;
+    grandmasterCount: number;
+    totalServerSummoners: number;
+  };
+  lastUpdated: string; // ISO timestamp
+}
+
+function ensureLeaderboardCacheDir(): void {
+  if (!fs.existsSync(LEADERBOARD_CACHE_DIR)) {
+    fs.mkdirSync(LEADERBOARD_CACHE_DIR, { recursive: true });
+  }
+}
+
+function getLeaderboardCachePath(server: string, tier: string, page: number = 1): string {
+  const key = `${server}_${tier}_p${page}`.toLowerCase().replace(/[^a-z0-9_\-]/g, '_');
+  return path.join(LEADERBOARD_CACHE_DIR, `${key}.json`);
+}
+
+/**
+ * Read cached leaderboard data for server + tier + page. Returns null if missing.
+ */
+export function getCachedLeaderboardData(
+  server: string,
+  tier: string,
+  page: number = 1
+): { data: CachedLeaderboardData; isExpired: boolean } | null {
+  const filePath = getLeaderboardCachePath(server, tier, page);
+
+  try {
+    if (!fs.existsSync(filePath)) return null;
+
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const cached: CachedLeaderboardData = JSON.parse(raw);
+
+    const lastUpdated = new Date(cached.lastUpdated).getTime();
+    const isExpired = Date.now() - lastUpdated > LEADERBOARD_CACHE_TTL_MS;
+
+    return { data: cached, isExpired };
+  } catch (err) {
+    console.warn('Leaderboard cache read error:', err);
+    return null;
+  }
+}
+
+/**
+ * Write leaderboard data to cache per page.
+ */
+export function setCachedLeaderboardData(
+  server: string,
+  tier: string,
+  page: number = 1,
+  entries: any[],
+  stats?: any
+): string {
+  ensureLeaderboardCacheDir();
+
+  const lastUpdated = new Date().toISOString();
+  const data: CachedLeaderboardData = {
+    server,
+    tier,
+    page,
+    entries,
+    stats,
+    lastUpdated,
+  };
+
+  const filePath = getLeaderboardCachePath(server, tier, page);
+  fs.writeFileSync(filePath, JSON.stringify(data), 'utf-8');
+
+  return lastUpdated;
+}
+
+

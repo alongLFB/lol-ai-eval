@@ -275,16 +275,29 @@ function calculateLadderStats(tier: string, rank: string, lp: number, server: st
   const tierVal = tierWeights[tier.toUpperCase()] ?? 0;
   const rankVal = rankWeights[rank.toUpperCase()] ?? 0;
   
-  // baseRating from 0 to 36
-  const baseRating = tierVal * 4 + rankVal;
-  const lpFraction = Math.min(lp, 100) / 100;
-  const rating = baseRating + lpFraction;
+  let rating = 0;
+  const isApex = ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(tier.toUpperCase());
+  if (isApex) {
+    // For apex tiers, rating starts at 28 (Master 0 LP) and scales infinitely with LP (100 LP = 1 rating unit)
+    rating = 28 + lp / 100;
+  } else {
+    // For Iron-Diamond, rating is 0 to 28
+    const baseRating = tierVal * 4 + rankVal;
+    const lpFraction = Math.min(lp, 100) / 100;
+    rating = baseRating + lpFraction;
+  }
 
   // Real rank distribution milestones (percentage of active players at/above this rank)
   const MILESTONES: Record<number, number> = {
-    36: 0.02, // Challenger
-    32: 0.06, // GM
-    28: 0.8,  // Master
+    36: 0.02, // Challenger (~800 LP)
+    35: 0.03, // (~700 LP)
+    34: 0.04, // (~600 LP)
+    33: 0.05, // (~500 LP)
+    32: 0.06, // GM (~400 LP)
+    31: 0.15, // (~300 LP)
+    30: 0.25, // (~200 LP)
+    29: 0.45, // (~100 LP)
+    28: 0.8,  // Master (0 LP)
     27: 1.5,  // Diamond I
     26: 2.2,  // Diamond II
     25: 3.0,  // Diamond III
@@ -315,15 +328,23 @@ function calculateLadderStats(tier: string, rank: string, lp: number, server: st
     0: 99.9,  // Iron IV
   };
 
-  const lowerKey = Math.floor(rating);
-  const upperKey = Math.min(lowerKey + 1, 36);
+  let roundedPercent = 0.01;
 
-  const lowerPercent = MILESTONES[lowerKey] ?? 99.9;
-  const upperPercent = MILESTONES[upperKey] ?? 0.02;
+  if (rating >= 36) {
+    // Beyond 800 LP, cap the percentage to top 0.01%
+    roundedPercent = 0.01;
+  } else {
+    const lowerKey = Math.floor(rating);
+    const upperKey = lowerKey + 1;
 
-  const fraction = rating - lowerKey;
-  const percentVal = lowerPercent - fraction * (lowerPercent - upperPercent);
-  const roundedPercent = parseFloat(percentVal.toFixed(2));
+    // Use 99.9 for anything below 0 (shouldn't happen), and 0.01 for anything above 36
+    const lowerPercent = MILESTONES[lowerKey] ?? (lowerKey >= 36 ? 0.01 : 99.9);
+    const upperPercent = MILESTONES[upperKey] ?? (upperKey >= 36 ? 0.01 : 99.9);
+
+    const fraction = rating - lowerKey;
+    const percentVal = lowerPercent - fraction * (lowerPercent - upperPercent);
+    roundedPercent = parseFloat(Math.max(percentVal, 0.01).toFixed(2));
+  }
 
   // Exact server sizes for active ranked player pool to match OP.GG absolute ranks
   const serverSizes: Record<string, number> = {
@@ -674,3 +695,206 @@ export async function fetchMatchesForPuuid(puuid: string, server: string, start:
   const rawMatches = await Promise.all(matchPromises);
   return rawMatches.filter((m): m is EnrichedMatchData => m !== null);
 }
+
+// ── Leaderboard Data Structure & Fetching ──
+
+export interface LeaderboardItem {
+  rank: number;
+  puuid: string;
+  summonerId: string;
+  gameName: string;
+  tagLine: string;
+  leaguePoints: number;
+  wins: number;
+  losses: number;
+  winRate: string;
+  hotStreak: boolean;
+  veteran: boolean;
+  freshBlood: boolean;
+  inactive: boolean;
+  tier: string;
+}
+
+export interface LeaderboardStats {
+  challengerCutoffLP: number;
+  challengerCount: number;
+  grandmasterCutoffLP: number;
+  grandmasterCount: number;
+  totalServerSummoners: number;
+}
+
+export interface LeaderboardResult {
+  entries: LeaderboardItem[];
+  stats: LeaderboardStats;
+}
+
+const SERVER_TOTAL_SUMMONERS: Record<string, number> = {
+  'EUW': 3081926,
+  'KR': 3820000,
+  'NA': 1650000,
+  'EUNE': 1420000,
+  'ME': 220000,
+  'TW': 1200000,
+  'BR': 1250000,
+  'LAS': 720000,
+  'LAN': 630000,
+  'OCE': 220000,
+};
+
+/**
+ * Fetch top leaderboard players for specified server, tier, and page (100 items per page)
+ */
+export async function fetchLeaderboard(
+  server: string,
+  tierStr: string = 'all',
+  page: number = 1
+): Promise<LeaderboardResult> {
+  const { region, platform } = getRouting(server);
+  const normalizedTier = tierStr.toLowerCase();
+
+  let rawEntries: any[] = [];
+  let challengerCutoffLP = 0;
+  let challengerCount = 300;
+  let grandmasterCutoffLP = 0;
+  let grandmasterCount = 700;
+
+  try {
+    if (normalizedTier === 'all') {
+      // Fetch Challenger & Grandmaster for top all tiers
+      const chalUrl = `https://${platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;
+      const gmUrl = `https://${platform}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5`;
+
+      const [chalData, gmData] = await Promise.all([
+        fetchRiot(chalUrl).catch(() => ({ entries: [] })),
+        fetchRiot(gmUrl).catch(() => ({ entries: [] })),
+      ]);
+
+      const chalEntries = (chalData.entries || []).map((e: any) => ({ ...e, tier: 'CHALLENGER' }));
+      const gmEntries = (gmData.entries || []).map((e: any) => ({ ...e, tier: 'GRANDMASTER' }));
+
+      chalEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+      gmEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+
+      challengerCount = chalEntries.length;
+      if (chalEntries.length > 0) {
+        challengerCutoffLP = chalEntries[chalEntries.length - 1].leaguePoints || 0;
+      }
+
+      grandmasterCount = gmEntries.length;
+      if (gmEntries.length > 0) {
+        grandmasterCutoffLP = gmEntries[gmEntries.length - 1].leaguePoints || 0;
+      }
+
+      // If page requires items beyond Challenger + GM (e.g. rank > 1000), fetch Master league as well
+      const targetRankEnd = page * 100;
+      let masterEntries: any[] = [];
+      if (targetRankEnd > (chalEntries.length + gmEntries.length)) {
+        const masterUrl = `https://${platform}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5`;
+        const masterData = await fetchRiot(masterUrl).catch(() => ({ entries: [] }));
+        masterEntries = (masterData.entries || []).map((e: any) => ({ ...e, tier: 'MASTER' }));
+        masterEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+      }
+
+      rawEntries = [...chalEntries, ...gmEntries, ...masterEntries];
+    } else if (['challenger', 'grandmaster', 'master'].includes(normalizedTier)) {
+      let endpoint = 'challengerleagues';
+      if (normalizedTier === 'grandmaster') endpoint = 'grandmasterleagues';
+      else if (normalizedTier === 'master') endpoint = 'masterleagues';
+
+      const url = `https://${platform}.api.riotgames.com/lol/league/v4/${endpoint}/by-queue/RANKED_SOLO_5x5`;
+      const data = await fetchRiot(url);
+      const tierName = normalizedTier.toUpperCase();
+      rawEntries = (data.entries || []).map((e: any) => ({ ...e, tier: tierName }));
+      rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+
+      if (normalizedTier === 'challenger') {
+        challengerCount = rawEntries.length;
+        if (rawEntries.length > 0) challengerCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
+      } else if (normalizedTier === 'grandmaster') {
+        grandmasterCount = rawEntries.length;
+        if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
+      }
+    } else {
+      // Non-Apex tier (diamond, emerald, platinum, gold, silver, bronze, iron)
+      const upperTier = normalizedTier.toUpperCase();
+      // Calculate Riot API page number (Riot returns ~205 entries per page)
+      const riotPage = Math.max(1, Math.ceil((page * 100) / 205));
+      const url = `https://${platform}.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${upperTier}/I?page=${riotPage}`;
+      const data = await fetchRiot(url);
+      const list = Array.isArray(data) ? data : [];
+      rawEntries = list.map((e: any) => ({ ...e, tier: upperTier }));
+      rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+    }
+  } catch (e) {
+    console.warn(`Error fetching leaderboard for ${server} ${tierStr}:`, e);
+  }
+
+  // 100 items per page slice
+  const startIndex = Math.max(0, (page - 1) * 100);
+  const targetSlice = rawEntries.slice(startIndex, startIndex + 100);
+
+  // Batch query Riot ID in chunks
+  const chunkSize = 10;
+  const enriched: LeaderboardItem[] = [];
+
+  for (let i = 0; i < targetSlice.length; i += chunkSize) {
+    const chunk = targetSlice.slice(i, i + chunkSize);
+    const chunkResults = await Promise.all(
+      chunk.map(async (entry: any, index: number) => {
+        const overallRank = startIndex + i + index + 1;
+        let gameName = entry.summonerName || `Player #${overallRank}`;
+        let tagLine = server;
+
+        if (entry.puuid) {
+          try {
+            const accUrl = `https://${region}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${entry.puuid}`;
+            const acc: RiotAccount = await fetchRiot(accUrl);
+            if (acc.gameName) gameName = acc.gameName;
+            if (acc.tagLine) tagLine = acc.tagLine;
+          } catch {
+            // Keep fallback
+          }
+        }
+
+        const wins = entry.wins || 0;
+        const losses = entry.losses || 0;
+        const total = wins + losses;
+        const winRate = total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
+
+        return {
+          rank: overallRank,
+          puuid: entry.puuid || '',
+          summonerId: entry.summonerId || '',
+          gameName,
+          tagLine,
+          leaguePoints: entry.leaguePoints || 0,
+          wins,
+          losses,
+          winRate,
+          hotStreak: !!entry.hotStreak,
+          veteran: !!entry.veteran,
+          freshBlood: !!entry.freshBlood,
+          inactive: !!entry.inactive,
+          tier: entry.tier || normalizedTier.toUpperCase(),
+        };
+      })
+    );
+
+    enriched.push(...chunkResults);
+  }
+
+  const totalServerSummoners = SERVER_TOTAL_SUMMONERS[server.toUpperCase()] || 1500000;
+
+  return {
+    entries: enriched,
+    stats: {
+      challengerCutoffLP: challengerCutoffLP || 1420,
+      challengerCount: challengerCount || 300,
+      grandmasterCutoffLP: grandmasterCutoffLP || 750,
+      grandmasterCount: grandmasterCount || 700,
+      totalServerSummoners,
+    },
+  };
+}
+
+

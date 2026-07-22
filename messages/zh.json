@@ -128,5 +128,52 @@
     "shareReview": "生成复盘长图",
     "winStreak": "连胜"
   },
+  "Navigation": {
+    "home": "战绩神谕",
+    "leaderboards": "梯队排行榜"
+  },
+  "Leaderboards": {
+    "title": "大区梯队排行榜",
+    "subtitle": "查看各大区最顶尖高手的胜点与对局胜率，数据每 24 小时自动更新缓存。",
+    "cacheStatus": "数据每 24 小时更新 | 上次更新: {time}",
+    "updating": "数据刷新中...",
+    "refresh": "强制刷新缓存",
+    "cachedNotice": "已显示 24 小时内最新缓存数据",
+    "searchPlaceholder": "在列表中搜索召唤师名称...",
+    "columns": {
+      "rank": "排名",
+      "summoner": "召唤师 (Riot ID)",
+      "tier": "段位",
+      "lp": "胜点 (LP)",
+      "winRate": "胜率",
+      "winsLosses": "胜/负",
+      "status": "状态",
+      "action": "查看战绩"
+    },
+    "tiers": {
+      "all": "All Tiers (全部段位)",
+      "challenger": "最强王者 (Challenger)",
+      "grandmaster": "傲世宗师 (Grandmaster)",
+      "master": "超凡大师 (Master)",
+      "diamond": "璀璨钻石 (Diamond)",
+      "emerald": "流光翡翠 (Emerald)",
+      "platinum": "华贵铂金 (Platinum)",
+      "gold": "荣耀黄金 (Gold)",
+      "silver": "不屈白银 (Silver)",
+      "bronze": "英勇黄铜 (Bronze)",
+      "iron": "坚韧黑铁 (Iron)"
+    },
+    "statusLabels": {
+      "hotStreak": "🔥 连胜中",
+      "veteran": "👑 榜单常客",
+      "freshBlood": "✨ 新晋星将"
+    },
+    "paginationSummary": "#{start} ~ #{end} / 总计 {total} 名召唤师",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "serverSummonersInfo": "当前有 {total} 名召唤师在召唤师峡谷",
+    "viewProfile": "查看战绩",
+    "empty": "暂无该段位排行榜数据"
+  },
   "switchLanguage": "切换到英文"
 }
