@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SummonerProfileData, EnrichedMatchData, EnrichedParticipant, PlayerRankInfo } from '@/lib/riot';
 import { cn } from '@/lib/utils';
-import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users, Download, Crown } from 'lucide-react';
+import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star, Loader2, Users, Download, Crown, ExternalLink } from 'lucide-react';
+
 import * as htmlToImage from 'html-to-image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -163,23 +164,33 @@ function formatTierShort(tier: string, rank: string): string {
 interface MatchRankData {
   ranks: Record<string, PlayerRankInfo>;
   averageRank: string;
+  soloAverageRank?: string;
+  flexAverageRank?: string;
   loading: boolean;
 }
 
 // ── Match Detail Expanded Panel ──
 function MatchDetailPanel({
-  match, patch, currentPuuid, rankData
+  match, patch, currentPuuid, rankData, server, rankMode = 'flex', onToggleRankMode
 }: {
   match: EnrichedMatchData;
   patch: string;
   currentPuuid?: string;
   rankData?: MatchRankData;
+  server: string;
+  rankMode?: 'solo' | 'flex';
+  onToggleRankMode?: (mode: 'solo' | 'flex') => void;
 }) {
   const t = useTranslations('MatchHistory');
+  const locale = useLocale();
   const blueTeam = match.allParticipants.filter(p => p.teamId === 100);
   const redTeam = match.allParticipants.filter(p => p.teamId === 200);
   const blueWon = blueTeam[0]?.win ?? false;
   const maxDamage = Math.max(...match.allParticipants.map(p => p.totalDamageDealtToChampions), 1);
+
+  const effectiveAvgRank = rankMode === 'solo'
+    ? (rankData?.soloAverageRank || rankData?.averageRank || '')
+    : (rankData?.flexAverageRank || rankData?.averageRank || '');
 
   const renderTeamTable = (team: EnrichedParticipant[], teamLabel: string, won: boolean) => (
     <div className="w-full">
@@ -205,6 +216,26 @@ function MatchDetailPanel({
         {team.map((p, idx) => {
           const isMe = currentPuuid ? p.puuid === currentPuuid : false;
           const pRank = rankData?.ranks[p.puuid];
+
+          let displayTier = pRank?.tier || 'UNRANKED';
+          let displayRank = pRank?.rank || '';
+          if (rankMode === 'solo' && pRank?.soloTier) {
+            displayTier = pRank.soloTier;
+            displayRank = pRank.soloRank || '';
+          } else if (rankMode === 'flex' && pRank?.flexTier) {
+            displayTier = pRank.flexTier;
+            displayRank = pRank.flexRank || '';
+          }
+
+          const handleOpenPlayer = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            const name = p.playerName || p.championName;
+            const tag = p.playerTag || server;
+            const targetId = `${name}#${tag}`;
+            const targetUrl = `/${locale}?summoner=${encodeURIComponent(targetId)}&server=${encodeURIComponent(server)}`;
+            window.open(targetUrl, '_blank');
+          };
+
           return (
             <div key={p.puuid + idx} className={cn(
               "flex items-center px-4 py-2.5 transition-colors gap-4",
@@ -229,18 +260,25 @@ function MatchDetailPanel({
                   <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner2Id, patch)} alt="" className="w-4 h-4 rounded-sm" />
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className={cn(
-                    "text-xs truncate w-full",
-                    isMe ? "text-white font-bold" : "text-gray-300"
-                  )}>
-                    {p.playerName || p.championName}
-                  </span>
+                  <div
+                    onClick={handleOpenPlayer}
+                    className="flex items-center gap-1 cursor-pointer group/player min-w-0"
+                    title={t('openInNewTab')}
+                  >
+                    <span className={cn(
+                      "text-xs truncate group-hover/player:text-blue-400 group-hover/player:underline transition-colors",
+                      isMe ? "text-white font-bold" : "text-gray-300 font-medium"
+                    )}>
+                      {p.playerName || p.championName}
+                    </span>
+                    <ExternalLink className="w-3 h-3 text-gray-500 opacity-0 group-hover/player:opacity-100 transition-opacity shrink-0" />
+                  </div>
                   <div className="h-[14px] flex items-center mt-0.5">
                     {rankData?.loading ? (
                       <Loader2 className="w-2.5 h-2.5 animate-spin text-gray-500" />
                     ) : pRank ? (
-                      <span className={cn("text-[10px] font-bold truncate", getTierColor(pRank.tier))}>
-                        {formatTierShort(pRank.tier, pRank.rank)}
+                      <span className={cn("text-[10px] font-bold truncate", getTierColor(displayTier))}>
+                        {formatTierShort(displayTier, displayRank)}
                       </span>
                     ) : (
                       <span className="text-[10px] text-gray-600">-</span>
@@ -323,11 +361,37 @@ function MatchDetailPanel({
       className="overflow-hidden"
     >
       <div className="px-2 sm:px-4 py-4 space-y-4 bg-gray-950/80 border-t border-gray-800/50">
-        {rankData && !rankData.loading && rankData.averageRank !== 'UNRANKED' && (
-          <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg bg-gray-800/50 border border-gray-700/50 max-w-sm mx-auto">
-            <Trophy className="w-3.5 h-3.5 text-yellow-500" />
-            <span className="text-xs text-gray-400">{t('averageRank')}</span>
-            <span className="text-xs font-bold text-gray-200">{getLocalizedAverageRank(rankData.averageRank, t)}</span>
+        {rankData && !rankData.loading && effectiveAvgRank !== 'UNRANKED' && (
+          <div className="flex flex-wrap items-center justify-between gap-3 py-2 px-4 rounded-xl bg-gray-900/60 border border-gray-800 max-w-xl mx-auto shadow-md">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-500" />
+              <span className="text-xs text-gray-400 font-medium">{t('averageRank')}:</span>
+              <span className="text-xs font-bold text-gray-100">{getLocalizedAverageRank(effectiveAvgRank, t)}</span>
+            </div>
+
+            {/* Rank Mode Toggle Pills */}
+            <div className="flex items-center gap-1 bg-gray-950 p-1 rounded-lg border border-gray-800 text-[11px]">
+              <button
+                type="button"
+                onClick={() => onToggleRankMode?.('flex')}
+                className={cn(
+                  "px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer",
+                  rankMode === 'flex' ? "bg-purple-600 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                )}
+              >
+                {t('showFlexRank')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleRankMode?.('solo')}
+                className={cn(
+                  "px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer",
+                  rankMode === 'solo' ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                )}
+              >
+                {t('showSoloRank')}
+              </button>
+            </div>
           </div>
         )}
         {rankData?.loading && (
@@ -346,6 +410,7 @@ function MatchDetailPanel({
     </motion.div>
   );
 }
+
 
 // ── Main MatchHistory Component ──
 export function MatchHistory({ profile, server }: { profile: SummonerProfileData; server: string }) {
@@ -406,7 +471,9 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   }, []);
 
   const [rankCache, setRankCache] = useState<Record<string, MatchRankData>>({});
+  const [matchRankModes, setMatchRankModes] = useState<Record<string, 'solo' | 'flex'>>({});
   const [showAllTeammates, setShowAllTeammates] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'ALL' | 'SOLO' | 'FLEX' | 'ARAM'>('ALL');
 
   // State to manage loaded matches and load-more pagination
@@ -646,7 +713,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
     setRankCache(prev => ({
       ...prev,
-      [match.matchId]: { ranks: {}, averageRank: '', loading: true },
+      [match.matchId]: { ranks: {}, averageRank: '', soloAverageRank: '', flexAverageRank: '', loading: true },
     }));
 
     try {
@@ -668,19 +735,21 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
           [match.matchId]: {
             ranks: ranksMap,
             averageRank: data.averageRank || '',
+            soloAverageRank: data.soloAverageRank || '',
+            flexAverageRank: data.flexAverageRank || '',
             loading: false,
           },
         }));
       } else {
         setRankCache(prev => ({
           ...prev,
-          [match.matchId]: { ranks: {}, averageRank: '', loading: false },
+          [match.matchId]: { ranks: {}, averageRank: '', soloAverageRank: '', flexAverageRank: '', loading: false },
         }));
       }
     } catch {
       setRankCache(prev => ({
         ...prev,
-        [match.matchId]: { ranks: {}, averageRank: '', loading: false },
+        [match.matchId]: { ranks: {}, averageRank: '', soloAverageRank: '', flexAverageRank: '', loading: false },
       }));
     }
   }, [rankCache, server]);
@@ -920,11 +989,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[130px]" title={`${tm.playerName}#${tm.playerTag}`}>
-                        {tm.playerName} <span className="text-[9px] text-gray-500 font-normal">#{tm.playerTag}</span>
+                      <div
+                        onClick={() => window.open(`/${locale}?summoner=${encodeURIComponent(tm.playerName + '#' + tm.playerTag)}&server=${server}`, '_blank')}
+                        className="text-xs font-bold text-gray-200 truncate max-w-[110px] sm:max-w-[130px] cursor-pointer hover:text-blue-400 hover:underline transition-colors flex items-center gap-1 group/tm"
+                        title={t('openInNewTab')}
+                      >
+                        <span className="truncate">{tm.playerName}</span>
+                        <span className="text-[9px] text-gray-500 font-normal shrink-0">#{tm.playerTag}</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-gray-500 opacity-0 group-hover/tm:opacity-100 transition-opacity shrink-0" />
                       </div>
                       <div className="text-[9px] text-gray-500 mt-0.5">{t('level')} {tm.summonerLevel}</div>
                     </div>
+
                   </div>
 
                   {/* Middle: Wins / Losses & Total Games (Left-aligned relative to column) */}
@@ -1501,7 +1577,11 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           patch={latestPatch}
                           currentPuuid={currentPuuid}
                           rankData={matchRankData}
+                          server={server}
+                          rankMode={matchRankModes[match.matchId] || (match.queueId === 440 ? 'flex' : 'solo')}
+                          onToggleRankMode={(mode) => setMatchRankModes(prev => ({ ...prev, [match.matchId]: mode }))}
                         />
+
                       </div>
                     )}
                   </AnimatePresence>

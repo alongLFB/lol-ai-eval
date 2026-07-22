@@ -552,6 +552,10 @@ export interface PlayerRankInfo {
   puuid: string;
   tier: string;
   rank: string;
+  soloTier?: string;
+  soloRank?: string;
+  flexTier?: string;
+  flexRank?: string;
 }
 
 // Tier numeric values for averaging
@@ -597,9 +601,21 @@ export async function fetchParticipantRanks(puuids: string[], server: string): P
           puuid,
           tier: best?.tier || 'UNRANKED',
           rank: best?.rank || '',
+          soloTier: soloQueue?.tier || 'UNRANKED',
+          soloRank: soloQueue?.rank || '',
+          flexTier: flexQueue?.tier || 'UNRANKED',
+          flexRank: flexQueue?.rank || '',
         };
       } catch {
-        return { puuid, tier: 'UNRANKED', rank: '' };
+        return {
+          puuid,
+          tier: 'UNRANKED',
+          rank: '',
+          soloTier: 'UNRANKED',
+          soloRank: '',
+          flexTier: 'UNRANKED',
+          flexRank: '',
+        };
       }
     })
   );
@@ -611,8 +627,21 @@ export async function fetchParticipantRanks(puuids: string[], server: string): P
  * Calculate average rank from a list of PlayerRankInfo.
  * Returns a string like "Emerald 3" or "UNRANKED".
  */
-export function calcAverageRank(ranks: PlayerRankInfo[]): string {
-  const ranked = ranks.filter(r => r.tier !== 'UNRANKED' && TIER_ORDER[r.tier] !== undefined);
+export function calcAverageRank(ranks: PlayerRankInfo[], mode: 'solo' | 'flex' | 'auto' = 'auto'): string {
+  const items = ranks.map(r => {
+    let t = r.tier;
+    let rank = r.rank;
+    if (mode === 'solo' && r.soloTier) {
+      t = r.soloTier;
+      rank = r.soloRank || '';
+    } else if (mode === 'flex' && r.flexTier) {
+      t = r.flexTier;
+      rank = r.flexRank || '';
+    }
+    return { tier: t, rank };
+  });
+
+  const ranked = items.filter(r => r.tier !== 'UNRANKED' && TIER_ORDER[r.tier] !== undefined);
   if (ranked.length === 0) return 'UNRANKED';
 
   const totalScore = ranked.reduce((sum, r) => {
@@ -630,6 +659,7 @@ export function calcAverageRank(ranks: PlayerRankInfo[]): string {
   if (tierIndex >= 7) return tierName.charAt(0) + tierName.slice(1).toLowerCase();
   return tierName.charAt(0) + tierName.slice(1).toLowerCase() + ' ' + RANK_NAMES[rankIndex];
 }
+
 
 export async function fetchMatchesForPuuid(puuid: string, server: string, start: number, count: number): Promise<EnrichedMatchData[]> {
   const { region } = getRouting(server);

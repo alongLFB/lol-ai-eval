@@ -46,7 +46,11 @@
     "vision": "视野",
     "items": "装备",
     "averageRank": "平均段位",
+    "showSoloRank": "单双排段位",
+    "showFlexRank": "灵活组排段位",
+    "openInNewTab": "在新标签页查看战绩",
     "loadingRanks": "加载段位信息...",
+
     "recentlyPlayed": "最近玩过",
     "frequentTeammates": "经常同队 (合作 2 次及以上)",
     "noFrequentTeammates": "最近 20 场对局中没有同队合作过 2 次及以上的队友",

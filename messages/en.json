@@ -46,7 +46,11 @@
     "vision": "Vision",
     "items": "Items",
     "averageRank": "Avg Rank",
+    "showSoloRank": "Solo/Duo Rank",
+    "showFlexRank": "Flex Rank",
+    "openInNewTab": "View profile in new tab",
     "loadingRanks": "Loading Ranks...",
+
     "recentlyPlayed": "Recently Played",
     "frequentTeammates": "Frequent Teammates (2+ Matches)",
     "noFrequentTeammates": "No frequent teammates in the last 20 matches.",

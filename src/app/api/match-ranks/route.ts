@@ -16,9 +16,12 @@ export async function POST(req: Request) {
     const limitedPuuids = puuids.slice(0, 10);
 
     const ranks = await fetchParticipantRanks(limitedPuuids, server);
-    const averageRank = calcAverageRank(ranks);
+    const averageRank = calcAverageRank(ranks, 'auto');
+    const soloAverageRank = calcAverageRank(ranks, 'solo');
+    const flexAverageRank = calcAverageRank(ranks, 'flex');
 
-    return NextResponse.json({ ranks, averageRank });
+    return NextResponse.json({ ranks, averageRank, soloAverageRank, flexAverageRank });
+
   } catch (error: any) {
     console.error('API /api/match-ranks Error:', error);
     const message = error.message || 'Failed to fetch rank data / 获取段位数据失败';
