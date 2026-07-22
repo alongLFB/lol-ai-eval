@@ -244,7 +244,8 @@ export default function LeaderboardsPage() {
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all cursor-pointer"
-                title="清除内容"
+                title={t('clearSearch')}
+
               >
                 <X className="w-3.5 h-3.5" />
               </button>

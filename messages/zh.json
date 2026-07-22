@@ -26,7 +26,9 @@
     "formatError": "格式错误！请输入带有 '#' 的完整 ID，例如 CatchingTheFire#EUW",
     "connecting": "连接中...",
     "insight": "神谕洞察",
+    "clear": "清空输入",
     "servers": {
+
       "EUW": "欧洲西部",
       "ME": "中东",
       "NA": "北美",
@@ -172,6 +174,7 @@
     "prevPage": "上一页",
     "nextPage": "下一页",
     "serverSummonersInfo": "当前有 {total} 名召唤师在召唤师峡谷",
+    "clearSearch": "清空搜索内容",
     "viewProfile": "查看战绩",
     "empty": "暂无该段位排行榜数据"
   },

@@ -89,7 +89,8 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
               type="button"
               onClick={handleClear}
               className="absolute right-3 p-1 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 transition-all cursor-pointer"
-              title="清除输入"
+              title={t('clear')}
+
             >
               <X className="w-4 h-4" />
             </button>
