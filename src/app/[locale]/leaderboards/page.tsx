@@ -167,16 +167,16 @@ export default function LeaderboardsPage() {
         </div>
 
         {/* Control Bar (OP.GG Header Bar) */}
-        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center bg-slate-900/80 p-3 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md">
+        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center bg-slate-900/80 p-3.5 sm:p-3 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md">
           
-          {/* Dropdowns */}
-          <div className="flex gap-2">
+          {/* Dropdowns Grid on Mobile */}
+          <div className="grid grid-cols-2 gap-2 w-full lg:w-auto">
             {/* Server Dropdown */}
             <div className="relative">
               <select
                 value={currentServer}
                 onChange={(e) => handleServerChange(e.target.value)}
-                className="appearance-none bg-slate-800/90 text-slate-100 text-sm font-bold pl-4 pr-9 py-2.5 rounded-xl border border-slate-700/80 hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                className="w-full appearance-none bg-slate-800/90 text-slate-100 text-xs sm:text-sm font-bold pl-3 pr-8 py-2.5 rounded-xl border border-slate-700/80 hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
               >
                 {SERVERS.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -184,7 +184,7 @@ export default function LeaderboardsPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
 
             {/* Tier Dropdown */}
@@ -192,7 +192,7 @@ export default function LeaderboardsPage() {
               <select
                 value={currentTier}
                 onChange={(e) => handleTierChange(e.target.value)}
-                className="appearance-none bg-slate-800/90 text-slate-100 text-sm font-bold pl-4 pr-9 py-2.5 rounded-xl border border-slate-700/80 hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                className="w-full appearance-none bg-slate-800/90 text-slate-100 text-xs sm:text-sm font-bold pl-3 pr-8 py-2.5 rounded-xl border border-slate-700/80 hover:border-slate-600 focus:outline-none focus:border-blue-500 transition-all cursor-pointer truncate"
               >
                 {TIERS.map((tItem) => (
                   <option key={tItem.id} value={tItem.id}>
@@ -200,32 +200,32 @@ export default function LeaderboardsPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
           </div>
 
           {/* Apex Summary Pill (Cutoff LP & Count stats) */}
-          <div className="flex-1 flex flex-wrap items-center gap-4 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-medium">
+          <div className="flex-1 flex flex-wrap items-center gap-3 sm:gap-4 px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-medium">
             {/* Challenger */}
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-amber-400 font-bold">
-                <Trophy className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="flex items-center gap-1 text-amber-400 font-bold text-xs">
+                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 {(stats?.challengerCutoffLP || 2386).toLocaleString()} LP
               </span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 9</span>
-              <span className="text-slate-400">{t('summonersCount', { count: (stats?.challengerCount || 304).toLocaleString() })}</span>
+              <span className="text-slate-400 text-xs">{t('summonersCount', { count: (stats?.challengerCount || 304).toLocaleString() })}</span>
             </div>
 
-            <span className="text-slate-700">|</span>
+            <span className="text-slate-700 hidden sm:inline">|</span>
 
             {/* Grandmaster */}
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-rose-400 font-bold">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="flex items-center gap-1 text-rose-400 font-bold text-xs">
+                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
                 {(stats?.grandmasterCutoffLP || 1759).toLocaleString()} LP
               </span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 8</span>
-              <span className="text-slate-400">{t('summonersCount', { count: (stats?.grandmasterCount || 754).toLocaleString() })}</span>
+              <span className="text-slate-400 text-xs">{t('summonersCount', { count: (stats?.grandmasterCount || 754).toLocaleString() })}</span>
             </div>
           </div>
 
@@ -237,7 +237,7 @@ export default function LeaderboardsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchPlaceholder', { server: currentServer })}
-              className="w-full bg-slate-950 text-slate-200 text-sm pl-9 pr-9 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-500"
+              className="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm pl-9 pr-9 py-2.5 sm:py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-500"
             />
             {searchQuery.length > 0 && (
               <button
@@ -275,11 +275,12 @@ export default function LeaderboardsPage() {
           </div>
         )}
 
-
-        {/* Leaderboard Table (100 rows per page) */}
+        {/* Leaderboard Data */}
         {!isLoading && !error && (
           <div className="space-y-6">
-            <div className="overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-2xl backdrop-blur-md">
+            
+            {/* Desktop Table View (md+) */}
+            <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-2xl backdrop-blur-md">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs sm:text-sm">
                   <thead className="bg-slate-950/90 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
@@ -347,9 +348,9 @@ export default function LeaderboardsPage() {
                             {/* Tier Badge */}
                             <td className="py-3.5 px-4 text-center">
                               <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] font-bold border ${
-                                item.tier === 'CHALLENGER' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' :
-                                item.tier === 'GRANDMASTER' ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' :
-                                item.tier === 'MASTER' ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
+                                item.tier.startsWith('CHALLENGER') ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' :
+                                item.tier.startsWith('GRANDMASTER') ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' :
+                                item.tier.startsWith('MASTER') ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
                                 'bg-slate-800 border-slate-700 text-slate-300'
                               }`}>
                                 {item.tier}
@@ -424,14 +425,99 @@ export default function LeaderboardsPage() {
               </div>
             </div>
 
+            {/* Mobile Responsive Cards View (< md) */}
+            <div className="md:hidden space-y-3">
+              {filteredEntries.length === 0 ? (
+                <div className="p-8 text-center text-slate-500 bg-slate-900/40 rounded-2xl border border-slate-800">
+                  {t('empty')}
+                </div>
+              ) : (
+                filteredEntries.map((item) => {
+                  const winRateVal = parseFloat(item.winRate);
+                  return (
+                    <div
+                      key={item.rank + item.puuid}
+                      className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 backdrop-blur-sm"
+                    >
+                      {/* Top Row: Rank, Player Name, Tier */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="font-mono font-black text-amber-400 text-sm shrink-0">
+                            #{item.rank}
+                          </span>
+                          <div className="font-bold text-slate-100 text-sm truncate flex items-center gap-1">
+                            <span className="truncate">{item.gameName}</span>
+                            <span className="text-slate-500 text-xs shrink-0">#{item.tagLine}</span>
+                          </div>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border shrink-0 ${
+                          item.tier.startsWith('CHALLENGER') ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' :
+                          item.tier.startsWith('GRANDMASTER') ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' :
+                          item.tier.startsWith('MASTER') ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
+                          'bg-slate-800 border-slate-700 text-slate-300'
+                        }`}>
+                          {item.tier}
+                        </span>
+                      </div>
+
+                      {/* Middle Row: LP & Win Rate Bar */}
+                      <div className="grid grid-cols-2 gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs">
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase">{t('columns.lp')}</span>
+                          <span className="font-mono font-bold text-amber-400 text-sm">
+                            {item.leaguePoints.toLocaleString()} LP
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex justify-between items-center text-[10px]">
+                            <span className="text-slate-400 uppercase">{t('columns.winRate')}</span>
+                            <span className="text-emerald-400 font-semibold">{item.wins}{t('winShort')} / {item.losses}{t('lossShort')}</span>
+                          </div>
+                          <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-1 border border-slate-800">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                              style={{ width: `${Math.min(winRateVal, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Row: Badges & Action */}
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex gap-1.5">
+                          {item.hotStreak && (
+                            <span className="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[10px] font-medium">
+                              {t('statusLabels.hotStreak')}
+                            </span>
+                          )}
+                          {item.veteran && (
+                            <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-medium">
+                              {t('statusLabels.veteran')}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleViewSummoner(item.gameName, item.tagLine)}
+                          className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-all flex items-center gap-1 shadow-md shadow-blue-500/20 cursor-pointer"
+                        >
+                          <span>{t('viewProfile')}</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
             {/* Pagination Controls (OP.GG style bottom bar) */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2 border-t border-slate-800/80 text-xs text-slate-400">
-              <div>
+              <div className="text-center sm:text-left">
                 {t('paginationSummary', { start: startRank, end: endRank, total: totalSummoners.toLocaleString() })}
               </div>
 
-
-              <div className="flex items-center gap-1.5">
+              {/* Desktop pagination buttons */}
+              <div className="hidden md:flex items-center gap-1.5">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || isLoading}
@@ -462,6 +548,30 @@ export default function LeaderboardsPage() {
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Mobile pagination controls (< md) */}
+              <div className="flex md:hidden items-center justify-between w-full gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                  className="flex-1 py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 disabled:opacity-40 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>{t('prevPage')}</span>
+                </button>
+                <span className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl font-mono font-bold text-xs text-blue-400 shrink-0">
+                  {currentPage} / 10
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === 10 || isLoading}
+                  className="flex-1 py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 disabled:opacity-40 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <span>{t('nextPage')}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
             </div>
 
           </div>
@@ -471,3 +581,4 @@ export default function LeaderboardsPage() {
     </div>
   );
 }
+

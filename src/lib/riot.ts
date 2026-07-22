@@ -241,7 +241,7 @@ function getRouting(server: string) {
   }
 }
 
-const fetchRiot = async (url: string) => {
+const fetchRiot = async (url: string, retries: number = 3): Promise<any> => {
   const apiKey = process.env.RIOT_API_KEY;
   if (!apiKey) throw new Error("RIOT_API_KEY is not configured");
 
@@ -250,6 +250,12 @@ const fetchRiot = async (url: string) => {
   });
 
   if (!res.ok) {
+    if (res.status === 429 && retries > 0) {
+      const retryAfterHeader = res.headers.get('Retry-After');
+      const waitMs = retryAfterHeader ? parseInt(retryAfterHeader, 10) * 1000 : 1500;
+      await new Promise((r) => setTimeout(r, waitMs));
+      return fetchRiot(url, retries - 1);
+    }
     if (res.status === 429) throw new Error("Riot API limit exceeded (429)");
     if (res.status === 404) throw new Error("Player or match not found (404)");
     if (res.status === 403) throw new Error("Riot API Key is invalid or expired (403)");
@@ -258,6 +264,7 @@ const fetchRiot = async (url: string) => {
 
   return res.json();
 };
+
 
 // ── Calculate ladder percentile and absolute rank number ──
 function calculateLadderStats(tier: string, rank: string, lp: number, server: string) {
@@ -840,6 +847,10 @@ export async function fetchLeaderboard(
   const enriched: LeaderboardItem[] = [];
 
   for (let i = 0; i < targetSlice.length; i += chunkSize) {
+    if (i > 0) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+
     const chunk = targetSlice.slice(i, i + chunkSize);
     const chunkResults = await Promise.all(
       chunk.map(async (entry: any, index: number) => {
@@ -885,9 +896,9 @@ export async function fetchLeaderboard(
       })
     );
 
-
     enriched.push(...chunkResults);
   }
+
 
   const totalServerSummoners = SERVER_TOTAL_SUMMONERS[server.toUpperCase()] || 1500000;
 
