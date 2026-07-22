@@ -236,7 +236,13 @@ function HomeContent() {
           </p>
         </div>
 
-        <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+        <SearchBar 
+          onSearch={handleSearch} 
+          isLoading={isLoading} 
+          initialValue={currentGameName && currentTagLine ? `${currentGameName}#${currentTagLine}` : ''}
+          initialServer={currentServer}
+        />
+
 
         {error && (
           <div className="mt-8 p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-200 text-center max-w-2xl mx-auto animate-in zoom-in duration-300">
