@@ -348,17 +348,19 @@ function calculateLadderStats(tier: string, rank: string, lp: number, server: st
 
   // Exact server sizes for active ranked player pool to match OP.GG absolute ranks
   const serverSizes: Record<string, number> = {
-    'EUW': 3015480, // Matches CatchingTheFire's exact absolute rank 397,742 at 13.19%
+    'EUW': 3081926,
     'EUNE': 1420000,
     'NA': 1650000,
     'KR': 3820000,
     'ME': 220000,
+    'TW': 1200000,
     'JP': 120000,
     'BR': 1250000,
     'LAS': 720000,
     'LAN': 630000,
     'OCE': 220000,
   };
+
   
   const serverSize = serverSizes[server.toUpperCase()] ?? 1500000;
   const absoluteRankVal = Math.round((roundedPercent / 100) * serverSize);
