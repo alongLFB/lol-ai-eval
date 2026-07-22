@@ -33,6 +33,7 @@ function HomeContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentGameName, setCurrentGameName] = useState('');
   const [currentTagLine, setCurrentTagLine] = useState('');
+  const [searchedKey, setSearchedKey] = useState('');
 
   // Auto search from URL parameters if present
   useEffect(() => {
@@ -40,14 +41,30 @@ function HomeContent() {
     const serverParam = searchParams.get('server') || 'EUW';
 
     if (summonerParam) {
-      const parts = summonerParam.split('-');
-      if (parts.length >= 2) {
-        const tagLine = parts.pop()!;
-        const gameName = parts.join('-');
+      const decodedParam = decodeURIComponent(summonerParam);
+      let gameName = '';
+      let tagLine = '';
+
+      if (decodedParam.includes('#')) {
+        const hashParts = decodedParam.split('#');
+        tagLine = hashParts.pop()!;
+        gameName = hashParts.join('#');
+      } else if (decodedParam.includes('-')) {
+        const dashParts = decodedParam.split('-');
+        tagLine = dashParts.pop()!;
+        gameName = dashParts.join('-');
+      } else {
+        gameName = decodedParam;
+        tagLine = serverParam;
+      }
+
+      const key = `${gameName.toLowerCase()}#${tagLine.toLowerCase()}@${serverParam.toLowerCase()}`;
+      if (gameName && tagLine && key !== searchedKey) {
+        setSearchedKey(key);
         handleSearch(gameName, tagLine, serverParam);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, searchedKey]);
 
   // Tick the relative time display every 30 seconds
   useEffect(() => {
@@ -88,11 +105,22 @@ function HomeContent() {
     setCurrentGameName(gameName);
     setCurrentTagLine(tagLine);
 
+    const cleanTag = tagLine.replace('#', '');
+    const searchKey = `${gameName.toLowerCase()}#${cleanTag.toLowerCase()}@${server.toLowerCase()}`;
+    setSearchedKey(searchKey);
+
+    // Update browser URL without full page reload
+    if (typeof window !== 'undefined') {
+      const formattedSummoner = `${encodeURIComponent(gameName)}-${encodeURIComponent(cleanTag)}`;
+      const newUrl = `/${locale}?summoner=${formattedSummoner}&server=${encodeURIComponent(server)}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameName, tagLine, server, locale }),
+        body: JSON.stringify({ gameName, tagLine: cleanTag, server, locale }),
       });
 
       const json = await res.json();
@@ -109,6 +137,7 @@ function HomeContent() {
       setIsLoading(false);
     }
   };
+
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing || !currentGameName || !currentTagLine) return;
