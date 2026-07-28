@@ -232,12 +232,12 @@ function calcMVPScore(p: ParticipantDto, teamKills: number): number {
 // ── Server routing ──
 function getRouting(server: string) {
   switch (server.toUpperCase()) {
-    case 'EUW': return { region: 'europe', platform: 'euw1' };
-    case 'ME': return { region: 'europe', platform: 'me1' };
-    case 'NA': return { region: 'americas', platform: 'na1' };
-    case 'KR': return { region: 'asia', platform: 'kr' };
-    case 'TW': return { region: 'asia', platform: 'tw2' };
-    default: return { region: 'europe', platform: 'euw1' };
+    case 'EUW': return { region: 'europe', matchRegion: 'europe', platform: 'euw1' };
+    case 'ME': return { region: 'europe', matchRegion: 'europe', platform: 'me1' };
+    case 'NA': return { region: 'americas', matchRegion: 'americas', platform: 'na1' };
+    case 'KR': return { region: 'asia', matchRegion: 'asia', platform: 'kr' };
+    case 'TW': return { region: 'asia', matchRegion: 'sea', platform: 'tw2' };
+    default: return { region: 'europe', matchRegion: 'europe', platform: 'euw1' };
   }
 }
 
@@ -412,7 +412,7 @@ function extractParticipant(p: ParticipantDto, gameDuration: number): EnrichedPa
 }
 
 export async function fetchSummonerData(gameName: string, tagLine: string, server: string): Promise<SummonerProfileData> {
-  const { region, platform } = getRouting(server);
+  const { region, matchRegion, platform } = getRouting(server);
 
   try {
     // 1. Get PUUID
@@ -432,13 +432,13 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const activeSolo = soloQueue || leagues[0];
 
     // 4. Get Match IDs (last 25 to guarantee 20 valid ones)
-    const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=25`;
+    const matchIdsUrl = `https://${matchRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=0&count=25`;
     const matchIds: string[] = await fetchRiot(matchIdsUrl);
 
     // 5. Get Match Details (enriched)
     const matchPromises = matchIds.map(async (matchId) => {
       try {
-        const matchUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+        const matchUrl = `https://${matchRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
         const matchData: MatchDto = await fetchRiot(matchUrl);
         const participant = matchData.info.participants.find(p => p.puuid === account.puuid);
 
@@ -662,15 +662,15 @@ export function calcAverageRank(ranks: PlayerRankInfo[], mode: 'solo' | 'flex' |
 
 
 export async function fetchMatchesForPuuid(puuid: string, server: string, start: number, count: number): Promise<EnrichedMatchData[]> {
-  const { region } = getRouting(server);
+  const { matchRegion } = getRouting(server);
   
   // 1. Get Match IDs
-  const matchIdsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
+  const matchIdsUrl = `https://${matchRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
   const matchIds: string[] = await fetchRiot(matchIdsUrl);
 
   const matchPromises = matchIds.map(async (matchId) => {
     try {
-      const matchUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+      const matchUrl = `https://${matchRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
       const matchData: MatchDto = await fetchRiot(matchUrl);
       const participant = matchData.info.participants.find(p => p.puuid === puuid);
 
