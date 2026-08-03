@@ -150,7 +150,7 @@
     "loadingData": "Fetching {server} {tier} page {page} leaderboard...",
     "retry": "Retry",
     "summonersCount": "{count} Summoners",
-    "lpChangeTooltip": "LP threshold change compared to yesterday's reset",
+    "lpChangeTooltip": "{tier} LP threshold change compared to yesterday's reset",
     "winShort": "W",
     "lossShort": "L",
     "columns": {
