@@ -253,16 +253,24 @@ export default function LeaderboardsPage() {
                 const diff = stats?.challengerLPDiff ?? -6;
                 const isPositive = diff >= 0;
                 return (
-                  <span
-                    title={t('lpChangeTooltip')}
-                    className={`px-1.5 py-0.5 rounded ${
-                      isPositive
-                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
-                        : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
-                    } text-[10px] font-bold inline-flex items-center gap-0.5 cursor-help transition-all`}
-                  >
-                    {isPositive ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
-                  </span>
+                  <div className="relative group flex items-center">
+                    <span
+                      className={`px-1.5 py-0.5 rounded ${
+                        isPositive
+                          ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                          : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+                      } text-[10px] font-bold inline-flex items-center gap-0.5 cursor-pointer transition-all`}
+                    >
+                      {isPositive ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
+                    </span>
+                    {/* Instant Custom UI Tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none transition-all">
+                      <div className="bg-slate-900 text-slate-200 text-[11px] font-medium px-2.5 py-1 rounded-lg border border-slate-700 shadow-xl whitespace-nowrap">
+                        {t('lpChangeTooltip')}
+                      </div>
+                      <div className="w-2 h-2 -mt-1 rotate-45 bg-slate-900 border-r border-b border-slate-700"></div>
+                    </div>
+                  </div>
                 );
               })()}
               <span className="text-slate-400 text-xs">
@@ -285,16 +293,24 @@ export default function LeaderboardsPage() {
                 const diff = stats?.grandmasterLPDiff ?? -10;
                 const isPositive = diff >= 0;
                 return (
-                  <span
-                    title={t('lpChangeTooltip')}
-                    className={`px-1.5 py-0.5 rounded ${
-                      isPositive
-                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
-                        : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
-                    } text-[10px] font-bold inline-flex items-center gap-0.5 cursor-help transition-all`}
-                  >
-                    {isPositive ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
-                  </span>
+                  <div className="relative group flex items-center">
+                    <span
+                      className={`px-1.5 py-0.5 rounded ${
+                        isPositive
+                          ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                          : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+                      } text-[10px] font-bold inline-flex items-center gap-0.5 cursor-pointer transition-all`}
+                    >
+                      {isPositive ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
+                    </span>
+                    {/* Instant Custom UI Tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none transition-all">
+                      <div className="bg-slate-900 text-slate-200 text-[11px] font-medium px-2.5 py-1 rounded-lg border border-slate-700 shadow-xl whitespace-nowrap">
+                        {t('lpChangeTooltip')}
+                      </div>
+                      <div className="w-2 h-2 -mt-1 rotate-45 bg-slate-900 border-r border-b border-slate-700"></div>
+                    </div>
+                  </div>
                 );
               })()}
               <span className="text-slate-400 text-xs">
