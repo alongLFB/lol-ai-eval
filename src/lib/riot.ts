@@ -1,4 +1,4 @@
-import { getAccountCache, setAccountCache } from './cache';
+import { getAccountCache, setAccountCache, updateApexHistory } from './cache';
 
 export interface RiotAccount {
   puuid: string;
@@ -760,8 +760,10 @@ export interface LeaderboardItem {
 export interface LeaderboardStats {
   challengerCutoffLP: number;
   challengerCount: number;
+  challengerLPDiff?: number;
   grandmasterCutoffLP: number;
   grandmasterCount: number;
+  grandmasterLPDiff?: number;
   totalServerSummoners: number;
 }
 
@@ -818,14 +820,21 @@ export async function fetchLeaderboard(
     chalEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
     gmEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
 
+    // Combine Challenger & Grandmaster to accurately find rank #300 (Challenger Cutoff) & rank #1000 (Grandmaster Cutoff)
+    const combinedApex = [...chalEntries, ...gmEntries].sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+
     challengerCount = chalEntries.length;
-    if (chalEntries.length > 0) {
-      challengerCutoffLP = chalEntries[0].leaguePoints || 2430;
+    if (combinedApex.length > 0) {
+      // 全服前 300 名最强王者入榜门槛胜点
+      const chalIndex = Math.min(299, combinedApex.length - 1);
+      challengerCutoffLP = combinedApex[chalIndex].leaguePoints || 2430;
     }
 
     grandmasterCount = gmEntries.length;
-    if (gmEntries.length > 0) {
-      grandmasterCutoffLP = gmEntries[0].leaguePoints || 1795;
+    if (combinedApex.length > 0) {
+      // 全服前 1000 名傲世宗师入榜门槛胜点
+      const gmIndex = Math.min(999, combinedApex.length - 1);
+      grandmasterCutoffLP = combinedApex[gmIndex].leaguePoints || 1795;
     }
 
     // If page requires items beyond Challenger + GM (e.g. rank > 1000), fetch Master league as well
@@ -852,10 +861,10 @@ export async function fetchLeaderboard(
 
     if (normalizedTier === 'challenger') {
       challengerCount = rawEntries.length;
-      if (rawEntries.length > 0) challengerCutoffLP = rawEntries[0].leaguePoints || 2430;
+      if (rawEntries.length > 0) challengerCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 2430;
     } else if (normalizedTier === 'grandmaster') {
       grandmasterCount = rawEntries.length;
-      if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[0].leaguePoints || 1795;
+      if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 1795;
     }
   } else {
     // Non-Apex tier (diamond, emerald, platinum, gold, silver, bronze, iron)
@@ -945,14 +954,21 @@ export async function fetchLeaderboard(
 
 
   const totalServerSummoners = SERVER_TOTAL_SUMMONERS[server.toUpperCase()] || 1500000;
+  const { chalDiff, gmDiff } = updateApexHistory(
+    server,
+    challengerCutoffLP || 2430,
+    grandmasterCutoffLP || 1795
+  );
 
   return {
     entries: enriched,
     stats: {
       challengerCutoffLP: challengerCutoffLP || 2430,
       challengerCount: challengerCount || 304,
+      challengerLPDiff: chalDiff,
       grandmasterCutoffLP: grandmasterCutoffLP || 1795,
       grandmasterCount: grandmasterCount || 754,
+      grandmasterLPDiff: gmDiff,
       totalServerSummoners,
     },
   };

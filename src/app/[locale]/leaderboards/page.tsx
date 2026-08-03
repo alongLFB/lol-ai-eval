@@ -238,7 +238,7 @@ export default function LeaderboardsPage() {
             </div>
           </div>
 
-          {/* Apex Summary Pill (Cutoff LP & Count stats) */}
+          {/* Apex Summary Pill (Cutoff LP & Count stats matching OP.GG design) */}
           <div className="flex-1 flex flex-wrap items-center gap-3 sm:gap-5 px-3.5 py-2 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-medium">
             {/* Challenger */}
             <div className="flex items-center gap-2">
@@ -246,11 +246,28 @@ export default function LeaderboardsPage() {
                 <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>{t('tiers.challenger')}</span>
               </span>
-              <span className="font-mono font-bold text-amber-400 text-xs">
+              <span className="font-mono font-bold text-slate-100 text-xs sm:text-sm">
                 {(stats?.challengerCutoffLP || 2430).toLocaleString()} LP
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 9</span>
-              <span className="text-slate-400 text-xs">{t('summonersCount', { count: (stats?.challengerCount || 304).toLocaleString() })}</span>
+              {(() => {
+                const diff = stats?.challengerLPDiff ?? -6;
+                const isPositive = diff >= 0;
+                return (
+                  <span
+                    title={t('lpChangeTooltip')}
+                    className={`px-1.5 py-0.5 rounded ${
+                      isPositive
+                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                        : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+                    } text-[10px] font-bold inline-flex items-center gap-0.5 cursor-help transition-all`}
+                  >
+                    {isPositive ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
+                  </span>
+                );
+              })()}
+              <span className="text-slate-400 text-xs">
+                {t('summonersCount', { count: (stats?.challengerCount || 304).toLocaleString() })}
+              </span>
             </div>
 
             <span className="text-slate-800 hidden sm:inline">|</span>
@@ -261,11 +278,28 @@ export default function LeaderboardsPage() {
                 <Crown className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                 <span>{t('tiers.grandmaster')}</span>
               </span>
-              <span className="font-mono font-bold text-rose-400 text-xs">
+              <span className="font-mono font-bold text-slate-100 text-xs sm:text-sm">
                 {(stats?.grandmasterCutoffLP || 1795).toLocaleString()} LP
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 8</span>
-              <span className="text-slate-400 text-xs">{t('summonersCount', { count: (stats?.grandmasterCount || 754).toLocaleString() })}</span>
+              {(() => {
+                const diff = stats?.grandmasterLPDiff ?? -10;
+                const isPositive = diff >= 0;
+                return (
+                  <span
+                    title={t('lpChangeTooltip')}
+                    className={`px-1.5 py-0.5 rounded ${
+                      isPositive
+                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                        : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+                    } text-[10px] font-bold inline-flex items-center gap-0.5 cursor-help transition-all`}
+                  >
+                    {isPositive ? `▲ ${diff}` : `▼ ${Math.abs(diff)}`}
+                  </span>
+                );
+              })()}
+              <span className="text-slate-400 text-xs">
+                {t('summonersCount', { count: (stats?.grandmasterCount || 741).toLocaleString() })}
+              </span>
             </div>
           </div>
 

@@ -147,9 +147,10 @@
     "refresh": "Force Refresh",
     "cachedNotice": "Displaying cached data from the last 24 hours",
     "searchPlaceholder": "Summoner #{server}",
-    "loadingData": "Fetching {server} server {tier} page {page} leaderboard data...",
+    "loadingData": "Fetching {server} {tier} page {page} leaderboard...",
     "retry": "Retry",
     "summonersCount": "{count} Summoners",
+    "lpChangeTooltip": "LP threshold change compared to yesterday's reset",
     "winShort": "W",
     "lossShort": "L",
     "columns": {

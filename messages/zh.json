@@ -150,6 +150,7 @@
     "loadingData": "正在拉取 {server} 服 {tier} 第 {page} 页排行榜数据...",
     "retry": "重试获取",
     "summonersCount": "{count} 名召唤师",
+    "lpChangeTooltip": "对比昨日结算的门槛胜点变化",
     "winShort": "胜",
     "lossShort": "负",
     "columns": {

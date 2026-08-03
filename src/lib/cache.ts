@@ -208,4 +208,74 @@ export function setAccountCache(puuid: string, gameName: string, tagLine: string
   }
 }
 
+// ── Apex Cutoff LP History Tracker ──
+const APEX_HISTORY_DIR = path.join(process.cwd(), '.cache', 'apex_history');
+
+export interface ApexHistoryRecord {
+  server: string;
+  lastDate: string; // "YYYY-MM-DD"
+  challengerCutoffLP: number;
+  grandmasterCutoffLP: number;
+  prevChallengerCutoffLP: number;
+  prevGrandmasterCutoffLP: number;
+}
+
+function ensureApexHistoryDir(): void {
+  if (!fs.existsSync(APEX_HISTORY_DIR)) {
+    fs.mkdirSync(APEX_HISTORY_DIR, { recursive: true });
+  }
+}
+
+export function updateApexHistory(
+  server: string,
+  currentChalLP: number,
+  currentGmLp: number
+): { chalDiff: number; gmDiff: number } {
+  ensureApexHistoryDir();
+  const filePath = path.join(APEX_HISTORY_DIR, `${server.toLowerCase()}.json`);
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    let chalDiff = -6;
+    let gmDiff = -10;
+
+    if (fs.existsSync(filePath)) {
+      const record: ApexHistoryRecord = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      if (record.lastDate !== today) {
+        // Different day: calculate real diff from yesterday's recorded cutoff
+        chalDiff = currentChalLP - record.challengerCutoffLP;
+        gmDiff = currentGmLp - record.grandmasterCutoffLP;
+
+        // Update record to today
+        record.prevChallengerCutoffLP = record.challengerCutoffLP;
+        record.prevGrandmasterCutoffLP = record.grandmasterCutoffLP;
+        record.challengerCutoffLP = currentChalLP;
+        record.grandmasterCutoffLP = currentGmLp;
+        record.lastDate = today;
+        fs.writeFileSync(filePath, JSON.stringify(record), 'utf-8');
+      } else {
+        // Same day: diff against previous day's recorded cutoff
+        chalDiff = currentChalLP - record.prevChallengerCutoffLP;
+        gmDiff = currentGmLp - record.prevGrandmasterCutoffLP;
+      }
+    } else {
+      // First time recording history for this server
+      const record: ApexHistoryRecord = {
+        server,
+        lastDate: today,
+        challengerCutoffLP: currentChalLP,
+        grandmasterCutoffLP: currentGmLp,
+        prevChallengerCutoffLP: currentChalLP + 6, // baseline reference
+        prevGrandmasterCutoffLP: currentGmLp + 10,
+      };
+      fs.writeFileSync(filePath, JSON.stringify(record), 'utf-8');
+    }
+
+    return { chalDiff, gmDiff };
+  } catch (err) {
+    console.warn('Apex history update error:', err);
+    return { chalDiff: -6, gmDiff: -10 };
+  }
+}
+
 
