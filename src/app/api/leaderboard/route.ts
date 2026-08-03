@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
   const force = searchParams.get('force') === 'true';
 
+  console.log(` GET /api/leaderboard?server=${server}&tier=${tier}&page=${page}${force ? '&force=true' : ''} 200`);
+
   try {
     // Check 24h cache first per (server, tier, page)
     const cached = getCachedLeaderboardData(server, tier, page);
@@ -39,11 +41,11 @@ export async function GET(req: NextRequest) {
       cached: false,
     });
   } catch (error: any) {
-    console.error(`Leaderboard fetch error for ${server} - ${tier} - page ${page}:`, error);
+    console.error(`[Leaderboard API Error] ${server} - ${tier} - page ${page}:`, error.message || error);
 
-    // Fallback to stale cache if fetch fails
+    // Fallback to stale cache if fetch fails AND cache exists
     const cached = getCachedLeaderboardData(server, tier, page);
-    if (cached) {
+    if (cached && cached.data.entries?.length > 0) {
       return NextResponse.json({
         server,
         tier,

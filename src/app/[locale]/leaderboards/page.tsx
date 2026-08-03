@@ -72,7 +72,7 @@ export default function LeaderboardsPage() {
 
     try {
       const url = `/api/leaderboard?server=${server}&tier=${tier}&page=${page}${force ? '&force=true' : ''}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       const data = await res.json();
 
       if (!res.ok) {

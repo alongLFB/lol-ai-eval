@@ -246,7 +246,8 @@ const fetchRiot = async (url: string, retries: number = 3): Promise<any> => {
   if (!apiKey) throw new Error("RIOT_API_KEY is not configured");
 
   const res = await fetch(url, {
-    headers: { 'X-Riot-Token': apiKey }
+    headers: { 'X-Riot-Token': apiKey },
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!res.ok) {
@@ -797,75 +798,73 @@ export async function fetchLeaderboard(
   let grandmasterCutoffLP = 0;
   let grandmasterCount = 700;
 
-  try {
-    if (normalizedTier === 'all') {
-      // Fetch Challenger & Grandmaster for top all tiers
-      const chalUrl = `https://${platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;
-      const gmUrl = `https://${platform}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5`;
+  console.log(`[Leaderboard API] Querying Riot endpoint for server=${server}, tier=${tierStr}, page=${page}`);
 
-      const [chalData, gmData] = await Promise.all([
-        fetchRiot(chalUrl).catch(() => ({ entries: [] })),
-        fetchRiot(gmUrl).catch(() => ({ entries: [] })),
-      ]);
+  if (normalizedTier === 'all') {
+    // Fetch Challenger & Grandmaster for top all tiers
+    const chalUrl = `https://${platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;
+    const gmUrl = `https://${platform}.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5`;
 
-      const chalEntries = (chalData.entries || []).map((e: any) => ({ ...e, tier: 'CHALLENGER' }));
-      const gmEntries = (gmData.entries || []).map((e: any) => ({ ...e, tier: 'GRANDMASTER' }));
+    const [chalData, gmData] = await Promise.all([
+      fetchRiot(chalUrl),
+      fetchRiot(gmUrl),
+    ]);
 
-      chalEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
-      gmEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+    const chalEntries = (chalData.entries || []).map((e: any) => ({ ...e, tier: 'CHALLENGER' }));
+    const gmEntries = (gmData.entries || []).map((e: any) => ({ ...e, tier: 'GRANDMASTER' }));
 
-      challengerCount = chalEntries.length;
-      if (chalEntries.length > 0) {
-        challengerCutoffLP = chalEntries[chalEntries.length - 1].leaguePoints || 0;
-      }
+    chalEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+    gmEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
 
-      grandmasterCount = gmEntries.length;
-      if (gmEntries.length > 0) {
-        grandmasterCutoffLP = gmEntries[gmEntries.length - 1].leaguePoints || 0;
-      }
-
-      // If page requires items beyond Challenger + GM (e.g. rank > 1000), fetch Master league as well
-      const targetRankEnd = page * 100;
-      let masterEntries: any[] = [];
-      if (targetRankEnd > (chalEntries.length + gmEntries.length)) {
-        const masterUrl = `https://${platform}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5`;
-        const masterData = await fetchRiot(masterUrl).catch(() => ({ entries: [] }));
-        masterEntries = (masterData.entries || []).map((e: any) => ({ ...e, tier: 'MASTER' }));
-        masterEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
-      }
-
-      rawEntries = [...chalEntries, ...gmEntries, ...masterEntries];
-    } else if (['challenger', 'grandmaster', 'master'].includes(normalizedTier)) {
-      let endpoint = 'challengerleagues';
-      if (normalizedTier === 'grandmaster') endpoint = 'grandmasterleagues';
-      else if (normalizedTier === 'master') endpoint = 'masterleagues';
-
-      const url = `https://${platform}.api.riotgames.com/lol/league/v4/${endpoint}/by-queue/RANKED_SOLO_5x5`;
-      const data = await fetchRiot(url);
-      const tierName = normalizedTier.toUpperCase();
-      rawEntries = (data.entries || []).map((e: any) => ({ ...e, tier: tierName }));
-      rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
-
-      if (normalizedTier === 'challenger') {
-        challengerCount = rawEntries.length;
-        if (rawEntries.length > 0) challengerCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
-      } else if (normalizedTier === 'grandmaster') {
-        grandmasterCount = rawEntries.length;
-        if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
-      }
-    } else {
-      // Non-Apex tier (diamond, emerald, platinum, gold, silver, bronze, iron)
-      const upperTier = normalizedTier.toUpperCase();
-      // Calculate Riot API page number (Riot returns ~205 entries per page)
-      const riotPage = Math.max(1, Math.ceil((page * 100) / 205));
-      const url = `https://${platform}.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${upperTier}/I?page=${riotPage}`;
-      const data = await fetchRiot(url);
-      const list = Array.isArray(data) ? data : [];
-      rawEntries = list.map((e: any) => ({ ...e, tier: upperTier, rank: e.rank || 'I' }));
-      rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+    challengerCount = chalEntries.length;
+    if (chalEntries.length > 0) {
+      challengerCutoffLP = chalEntries[chalEntries.length - 1].leaguePoints || 0;
     }
-  } catch (e) {
-    console.warn(`Error fetching leaderboard for ${server} ${tierStr}:`, e);
+
+    grandmasterCount = gmEntries.length;
+    if (gmEntries.length > 0) {
+      grandmasterCutoffLP = gmEntries[gmEntries.length - 1].leaguePoints || 0;
+    }
+
+    // If page requires items beyond Challenger + GM (e.g. rank > 1000), fetch Master league as well
+    const targetRankEnd = page * 100;
+    let masterEntries: any[] = [];
+    if (targetRankEnd > (chalEntries.length + gmEntries.length)) {
+      const masterUrl = `https://${platform}.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5`;
+      const masterData = await fetchRiot(masterUrl);
+      masterEntries = (masterData.entries || []).map((e: any) => ({ ...e, tier: 'MASTER' }));
+      masterEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+    }
+
+    rawEntries = [...chalEntries, ...gmEntries, ...masterEntries];
+  } else if (['challenger', 'grandmaster', 'master'].includes(normalizedTier)) {
+    let endpoint = 'challengerleagues';
+    if (normalizedTier === 'grandmaster') endpoint = 'grandmasterleagues';
+    else if (normalizedTier === 'master') endpoint = 'masterleagues';
+
+    const url = `https://${platform}.api.riotgames.com/lol/league/v4/${endpoint}/by-queue/RANKED_SOLO_5x5`;
+    const data = await fetchRiot(url);
+    const tierName = normalizedTier.toUpperCase();
+    rawEntries = (data.entries || []).map((e: any) => ({ ...e, tier: tierName }));
+    rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
+
+    if (normalizedTier === 'challenger') {
+      challengerCount = rawEntries.length;
+      if (rawEntries.length > 0) challengerCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
+    } else if (normalizedTier === 'grandmaster') {
+      grandmasterCount = rawEntries.length;
+      if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
+    }
+  } else {
+    // Non-Apex tier (diamond, emerald, platinum, gold, silver, bronze, iron)
+    const upperTier = normalizedTier.toUpperCase();
+    // Calculate Riot API page number (Riot returns ~205 entries per page)
+    const riotPage = Math.max(1, Math.ceil((page * 100) / 205));
+    const url = `https://${platform}.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${upperTier}/I?page=${riotPage}`;
+    const data = await fetchRiot(url);
+    const list = Array.isArray(data) ? data : [];
+    rawEntries = list.map((e: any) => ({ ...e, tier: upperTier, rank: e.rank || 'I' }));
+    rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
   }
 
   // 100 items per page slice
@@ -875,10 +874,11 @@ export async function fetchLeaderboard(
   // Batch query Riot ID in chunks
   const chunkSize = 10;
   const enriched: LeaderboardItem[] = [];
+  let apiKeyFailed = false;
 
   for (let i = 0; i < targetSlice.length; i += chunkSize) {
     if (i > 0) {
-      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 50));
     }
 
     const chunk = targetSlice.slice(i, i + chunkSize);
@@ -888,14 +888,16 @@ export async function fetchLeaderboard(
         let gameName = entry.summonerName || `Player #${overallRank}`;
         let tagLine = server;
 
-        if (entry.puuid) {
+        if (!apiKeyFailed && entry.puuid && !entry.puuid.startsWith('mock_') && (!entry.summonerName || entry.summonerName.startsWith('Player #'))) {
           try {
             const accUrl = `https://${region}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${entry.puuid}`;
             const acc: RiotAccount = await fetchRiot(accUrl);
             if (acc.gameName) gameName = acc.gameName;
             if (acc.tagLine) tagLine = acc.tagLine;
-          } catch {
-            // Keep fallback
+          } catch (err: any) {
+            if (err?.message?.includes('403') || err?.message?.includes('not configured')) {
+              apiKeyFailed = true; // Stop making subsequent failed API calls
+            }
           }
         }
 
