@@ -119,16 +119,18 @@ export default function LeaderboardsPage() {
     router.push(`/${locale}?summoner=${formattedId}&server=${currentServer}`);
   };
 
-  // Filter entries by search query
-  const filteredEntries = entries.filter((item) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.gameName.toLowerCase().includes(query) ||
-      item.tagLine.toLowerCase().includes(query) ||
-      item.rank.toString().includes(query)
-    );
-  });
+  // Filter entries by search query and enforce 20 items per page
+  const filteredEntries = entries
+    .filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        item.gameName.toLowerCase().includes(query) ||
+        item.tagLine.toLowerCase().includes(query) ||
+        item.rank.toString().includes(query)
+      );
+    })
+    .slice(0, 20);
 
   const formatTierDisplay = (tierStr: string) => {
     if (!tierStr) return '';
@@ -162,8 +164,9 @@ export default function LeaderboardsPage() {
     : 'N/A';
 
   const totalSummoners = stats?.totalServerSummoners || 3081926;
-  const startRank = (currentPage - 1) * 100 + 1;
-  const endRank = currentPage * 100;
+  const pageSize = 20;
+  const startRank = (currentPage - 1) * pageSize + 1;
+  const endRank = currentPage * pageSize;
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-slate-100 py-8 px-4 sm:px-6 lg:px-8">

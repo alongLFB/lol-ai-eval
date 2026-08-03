@@ -1,3 +1,5 @@
+import { getAccountCache, setAccountCache } from './cache';
+
 export interface RiotAccount {
   puuid: string;
   gameName: string;
@@ -858,8 +860,8 @@ export async function fetchLeaderboard(
   } else {
     // Non-Apex tier (diamond, emerald, platinum, gold, silver, bronze, iron)
     const upperTier = normalizedTier.toUpperCase();
-    // Calculate Riot API page number (Riot returns ~205 entries per page)
-    const riotPage = Math.max(1, Math.ceil((page * 100) / 205));
+    // Calculate Riot API page number (Riot returns ~205 entries per page, our page size is 20)
+    const riotPage = Math.max(1, Math.ceil((page * 20) / 205));
     const url = `https://${platform}.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${upperTier}/I?page=${riotPage}`;
     const data = await fetchRiot(url);
     const list = Array.isArray(data) ? data : [];
@@ -867,9 +869,10 @@ export async function fetchLeaderboard(
     rawEntries.sort((a: any, b: any) => (b.leaguePoints || 0) - (a.leaguePoints || 0));
   }
 
-  // 100 items per page slice
-  const startIndex = Math.max(0, (page - 1) * 100);
-  const targetSlice = rawEntries.slice(startIndex, startIndex + 100);
+  // 20 items per page slice for optimized API rate limits and fast rendering
+  const pageSize = 20;
+  const startIndex = Math.max(0, (page - 1) * pageSize);
+  const targetSlice = rawEntries.slice(startIndex, startIndex + pageSize);
 
   // Batch query Riot ID in chunks
   const chunkSize = 10;
@@ -888,15 +891,24 @@ export async function fetchLeaderboard(
         let gameName = entry.summonerName || `Player #${overallRank}`;
         let tagLine = server;
 
-        if (!apiKeyFailed && entry.puuid && !entry.puuid.startsWith('mock_') && (!entry.summonerName || entry.summonerName.startsWith('Player #'))) {
-          try {
-            const accUrl = `https://${region}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${entry.puuid}`;
-            const acc: RiotAccount = await fetchRiot(accUrl);
-            if (acc.gameName) gameName = acc.gameName;
-            if (acc.tagLine) tagLine = acc.tagLine;
-          } catch (err: any) {
-            if (err?.message?.includes('403') || err?.message?.includes('not configured')) {
-              apiKeyFailed = true; // Stop making subsequent failed API calls
+        if (entry.puuid) {
+          const cachedAcc = getAccountCache(entry.puuid);
+          if (cachedAcc) {
+            gameName = cachedAcc.gameName;
+            tagLine = cachedAcc.tagLine;
+          } else if (!apiKeyFailed && !entry.puuid.startsWith('mock_') && (!entry.summonerName || entry.summonerName.startsWith('Player #'))) {
+            try {
+              const accUrl = `https://${region}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${entry.puuid}`;
+              const acc: RiotAccount = await fetchRiot(accUrl);
+              if (acc.gameName) {
+                gameName = acc.gameName;
+                tagLine = acc.tagLine;
+                setAccountCache(entry.puuid, acc.gameName, acc.tagLine);
+              }
+            } catch (err: any) {
+              if (err?.message?.includes('403') || err?.message?.includes('not configured')) {
+                apiKeyFailed = true; // Stop making subsequent failed API calls
+              }
             }
           }
         }

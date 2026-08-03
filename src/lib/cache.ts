@@ -176,4 +176,36 @@ export function setCachedLeaderboardData(
   return lastUpdated;
 }
 
+// ── PUUID to Riot ID Account Cache Configuration ──
+const ACCOUNT_CACHE_DIR = path.join(process.cwd(), '.cache', 'accounts');
+
+function ensureAccountCacheDir(): void {
+  if (!fs.existsSync(ACCOUNT_CACHE_DIR)) {
+    fs.mkdirSync(ACCOUNT_CACHE_DIR, { recursive: true });
+  }
+}
+
+export function getAccountCache(puuid: string): { gameName: string; tagLine: string } | null {
+  if (!puuid || puuid.startsWith('mock_')) return null;
+  const filePath = path.join(ACCOUNT_CACHE_DIR, `${puuid.replace(/[^a-zA-Z0-9_\-]/g, '_')}.json`);
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function setAccountCache(puuid: string, gameName: string, tagLine: string): void {
+  if (!puuid || puuid.startsWith('mock_') || !gameName) return;
+  ensureAccountCacheDir();
+  const filePath = path.join(ACCOUNT_CACHE_DIR, `${puuid.replace(/[^a-zA-Z0-9_\-]/g, '_')}.json`);
+  try {
+    fs.writeFileSync(filePath, JSON.stringify({ gameName, tagLine }), 'utf-8');
+  } catch (err) {
+    console.warn('Account cache write error:', err);
+  }
+}
+
 
