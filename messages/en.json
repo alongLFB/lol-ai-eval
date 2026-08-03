@@ -173,7 +173,8 @@
       "gold": "Gold",
       "silver": "Silver",
       "bronze": "Bronze",
-      "iron": "Iron"
+      "iron": "Iron",
+      "unranked": "Unranked"
     },
     "statusLabels": {
       "hotStreak": "🔥 Hot Streak",

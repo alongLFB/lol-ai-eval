@@ -130,6 +130,28 @@ export default function LeaderboardsPage() {
     );
   });
 
+  const formatTierDisplay = (tierStr: string) => {
+    if (!tierStr) return '';
+    const parts = tierStr.trim().split(' ');
+    const mainTierKey = parts[0].toLowerCase();
+    const division = parts.slice(1).join(' ');
+
+    let translated = parts[0];
+    try {
+      translated = t(`tiers.${mainTierKey}`);
+    } catch {
+      // fallback
+    }
+
+    // 大师 (Master)、宗师 (Grandmaster)、王者 (Challenger) 等顶尖段位无小段位区分 (I~IV/1~4)
+    const isApexTier = ['master', 'grandmaster', 'challenger'].includes(mainTierKey);
+    if (isApexTier || !division) {
+      return translated;
+    }
+
+    return `${translated} ${division}`;
+  };
+
   const formattedLastUpdated = lastUpdated
     ? new Date(lastUpdated).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
         month: 'short',
@@ -353,7 +375,7 @@ export default function LeaderboardsPage() {
                                 item.tier.startsWith('MASTER') ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
                                 'bg-slate-800 border-slate-700 text-slate-300'
                               }`}>
-                                {item.tier}
+                                {formatTierDisplay(item.tier)}
                               </span>
                             </td>
 
@@ -456,7 +478,7 @@ export default function LeaderboardsPage() {
                           item.tier.startsWith('MASTER') ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
                           'bg-slate-800 border-slate-700 text-slate-300'
                         }`}>
-                          {item.tier}
+                          {formatTierDisplay(item.tier)}
                         </span>
                       </div>
 

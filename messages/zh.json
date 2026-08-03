@@ -163,17 +163,18 @@
       "action": "查看战绩"
     },
     "tiers": {
-      "all": "All Tiers (全部段位)",
-      "challenger": "最强王者 (Challenger)",
-      "grandmaster": "傲世宗师 (Grandmaster)",
-      "master": "超凡大师 (Master)",
-      "diamond": "璀璨钻石 (Diamond)",
-      "emerald": "流光翡翠 (Emerald)",
-      "platinum": "华贵铂金 (Platinum)",
-      "gold": "荣耀黄金 (Gold)",
-      "silver": "不屈白银 (Silver)",
-      "bronze": "英勇黄铜 (Bronze)",
-      "iron": "坚韧黑铁 (Iron)"
+      "all": "全部段位",
+      "challenger": "最强王者",
+      "grandmaster": "傲世宗师",
+      "master": "超凡大师",
+      "diamond": "璀璨钻石",
+      "emerald": "流光翡翠",
+      "platinum": "华贵铂金",
+      "gold": "荣耀黄金",
+      "silver": "不屈白银",
+      "bronze": "英勇黄铜",
+      "iron": "坚韧黑铁",
+      "unranked": "无段位"
     },
     "statusLabels": {
       "hotStreak": "🔥 连胜",
