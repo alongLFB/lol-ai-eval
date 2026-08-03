@@ -80,7 +80,15 @@ export default function LeaderboardsPage() {
       }
 
       setEntries(data.entries || []);
-      if (data.stats) setStats(data.stats);
+      if (data.stats) {
+        setStats((prevStats) => {
+          // 只有当全新获取大区统计或拿到真正的王者/宗师门槛数据时才更新，避免切段位时覆盖全服门槛数据
+          if (!prevStats || (data.stats.challengerCutoffLP > 0 && data.stats.challengerCutoffLP !== 1420)) {
+            return data.stats;
+          }
+          return prevStats;
+        });
+      }
       setLastUpdated(data.lastUpdated || null);
     } catch (err: any) {
       console.error('Failed to load leaderboard:', err);
@@ -99,6 +107,7 @@ export default function LeaderboardsPage() {
     setCurrentServer(server);
     setCurrentPage(1);
     setSearchQuery('');
+    setStats(null); // 切换大区时清空统计，重新拉取新大区的王者/宗师门槛
   };
 
   const handleTierChange = (tier: string) => {
@@ -230,24 +239,30 @@ export default function LeaderboardsPage() {
           </div>
 
           {/* Apex Summary Pill (Cutoff LP & Count stats) */}
-          <div className="flex-1 flex flex-wrap items-center gap-3 sm:gap-4 px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-medium">
+          <div className="flex-1 flex flex-wrap items-center gap-3 sm:gap-5 px-3.5 py-2 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-medium">
             {/* Challenger */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="flex items-center gap-1 text-amber-400 font-bold text-xs">
-                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                {(stats?.challengerCutoffLP || 2386).toLocaleString()} LP
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold text-[11px]">
+                <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>{t('tiers.challenger')}</span>
+              </span>
+              <span className="font-mono font-bold text-amber-400 text-xs">
+                {(stats?.challengerCutoffLP || 2430).toLocaleString()} LP
               </span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 9</span>
               <span className="text-slate-400 text-xs">{t('summonersCount', { count: (stats?.challengerCount || 304).toLocaleString() })}</span>
             </div>
 
-            <span className="text-slate-700 hidden sm:inline">|</span>
+            <span className="text-slate-800 hidden sm:inline">|</span>
 
             {/* Grandmaster */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="flex items-center gap-1 text-rose-400 font-bold text-xs">
-                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
-                {(stats?.grandmasterCutoffLP || 1759).toLocaleString()} LP
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold text-[11px]">
+                <Crown className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>{t('tiers.grandmaster')}</span>
+              </span>
+              <span className="font-mono font-bold text-rose-400 text-xs">
+                {(stats?.grandmasterCutoffLP || 1795).toLocaleString()} LP
               </span>
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">▲ 8</span>
               <span className="text-slate-400 text-xs">{t('summonersCount', { count: (stats?.grandmasterCount || 754).toLocaleString() })}</span>

@@ -820,12 +820,12 @@ export async function fetchLeaderboard(
 
     challengerCount = chalEntries.length;
     if (chalEntries.length > 0) {
-      challengerCutoffLP = chalEntries[chalEntries.length - 1].leaguePoints || 0;
+      challengerCutoffLP = chalEntries[0].leaguePoints || 2430;
     }
 
     grandmasterCount = gmEntries.length;
     if (gmEntries.length > 0) {
-      grandmasterCutoffLP = gmEntries[gmEntries.length - 1].leaguePoints || 0;
+      grandmasterCutoffLP = gmEntries[0].leaguePoints || 1795;
     }
 
     // If page requires items beyond Challenger + GM (e.g. rank > 1000), fetch Master league as well
@@ -852,10 +852,10 @@ export async function fetchLeaderboard(
 
     if (normalizedTier === 'challenger') {
       challengerCount = rawEntries.length;
-      if (rawEntries.length > 0) challengerCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
+      if (rawEntries.length > 0) challengerCutoffLP = rawEntries[0].leaguePoints || 2430;
     } else if (normalizedTier === 'grandmaster') {
       grandmasterCount = rawEntries.length;
-      if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[rawEntries.length - 1].leaguePoints || 0;
+      if (rawEntries.length > 0) grandmasterCutoffLP = rawEntries[0].leaguePoints || 1795;
     }
   } else {
     // Non-Apex tier (diamond, emerald, platinum, gold, silver, bronze, iron)
@@ -949,10 +949,10 @@ export async function fetchLeaderboard(
   return {
     entries: enriched,
     stats: {
-      challengerCutoffLP: challengerCutoffLP || 1420,
-      challengerCount: challengerCount || 300,
-      grandmasterCutoffLP: grandmasterCutoffLP || 750,
-      grandmasterCount: grandmasterCount || 700,
+      challengerCutoffLP: challengerCutoffLP || 2430,
+      challengerCount: challengerCount || 304,
+      grandmasterCutoffLP: grandmasterCutoffLP || 1795,
+      grandmasterCount: grandmasterCount || 754,
       totalServerSummoners,
     },
   };
