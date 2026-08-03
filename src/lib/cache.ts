@@ -96,7 +96,10 @@ export const LEADERBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 const LEADERBOARD_CACHE_DIR = path.join(process.cwd(), '.cache', 'leaderboards');
 
+export const CURRENT_CACHE_VERSION = 2;
+
 export interface CachedLeaderboardData {
+  version?: number;
   server: string;
   tier: string;
   page: number;
@@ -138,6 +141,13 @@ export function getCachedLeaderboardData(
     const raw = fs.readFileSync(filePath, 'utf-8');
     const cached: CachedLeaderboardData = JSON.parse(raw);
 
+    // Auto invalidate stale cache versions from older code deployments
+    if (!cached.version || cached.version !== CURRENT_CACHE_VERSION) {
+      console.log(`[Cache Invalidation] Incompatible cache version detected in ${filePath}. Invalidating.`);
+      try { fs.unlinkSync(filePath); } catch {}
+      return null;
+    }
+
     const lastUpdated = new Date(cached.lastUpdated).getTime();
     const isExpired = Date.now() - lastUpdated > LEADERBOARD_CACHE_TTL_MS;
 
@@ -162,6 +172,7 @@ export function setCachedLeaderboardData(
 
   const lastUpdated = new Date().toISOString();
   const data: CachedLeaderboardData = {
+    version: CURRENT_CACHE_VERSION,
     server,
     tier,
     page,

@@ -57,6 +57,7 @@ jobs:
             fi
 
             rm -rf .next
+            rm -rf .cache
             npm ci
             npm run build
 
