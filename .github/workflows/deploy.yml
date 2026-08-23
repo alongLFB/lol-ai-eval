@@ -46,13 +46,21 @@ jobs:
             mkdir -p ~/github
             cd ~/github
             
-            if [ ! -d "lol-ai-eval" ]; then
-              echo "==> Repository not found locally. Cloning..."
+            if [ ! -d "lol-ai-eval/.git" ]; then
+              echo "==> Repository or .git directory not found locally. Cloning..."
+              if [ -f "lol-ai-eval/.env" ]; then
+                cp lol-ai-eval/.env /tmp/lol-ai-eval.env.bak
+              fi
+              rm -rf lol-ai-eval
               git clone https://github.com/alongLFB/lol-ai-eval.git
+              if [ -f "/tmp/lol-ai-eval.env.bak" ]; then
+                mv /tmp/lol-ai-eval.env.bak lol-ai-eval/.env
+              fi
             fi
             cd lol-ai-eval
             
             echo "==> Pulling latest master code..."
+            git remote set-url origin https://github.com/alongLFB/lol-ai-eval.git > /dev/null 2>&1 || true
             git fetch origin master
             git reset --hard origin/master
 
