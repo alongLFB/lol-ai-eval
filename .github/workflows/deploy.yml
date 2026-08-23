@@ -42,7 +42,7 @@ jobs:
           command_timeout: 15m
           envs: ENV_B64,HAS_ENV
           script: |
-            set -euo pipefail
+            set -e
             mkdir -p ~/github
             cd ~/github
             
@@ -56,23 +56,23 @@ jobs:
             git fetch origin master
             git reset --hard origin/master
 
-            # 如果在 GitHub Secrets 中配置了 ENV_FILE 或 DOT_ENV，则同步写入服务器 .env；否则保留服务器原有配置
+            # 如果在 GitHub Secrets 中配置了 ENV_FILE，则同步写入服务器 .env；否则保留服务器原有配置
             if [ "${HAS_ENV:-0}" = "1" ] && [ -n "${ENV_B64:-}" ]; then
               echo "==> Updating .env from GitHub Secrets..."
               echo "$ENV_B64" | base64 -d > .env
-              chmod 600 .env || true
+              chmod 600 .env 2>/dev/null || true
             else
               echo "==> No GitHub Secrets .env configured, keeping existing server .env..."
             fi
 
             # 停止可能存在的历史 PM2 进程（若有）
-            if command -v pm2 &> /dev/null; then
-              pm2 stop lol-ai-eval 2>/dev/null || true
-              pm2 delete lol-ai-eval 2>/dev/null || true
+            if command -v pm2 > /dev/null 2>&1; then
+              pm2 stop lol-ai-eval > /dev/null 2>&1 || true
+              pm2 delete lol-ai-eval > /dev/null 2>&1 || true
             fi
 
             echo "==> Deploying with Docker Compose..."
-            docker compose down 2>/dev/null || true
+            docker compose down > /dev/null 2>&1 || true
             docker compose up -d --build
 
             echo "==> Verifying container status..."
