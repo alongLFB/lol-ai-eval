@@ -249,7 +249,7 @@ const fetchRiot = async (url: string, retries: number = 3): Promise<any> => {
 
   const res = await fetch(url, {
     headers: { 'X-Riot-Token': apiKey },
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {
@@ -511,9 +511,18 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const losses = activeSolo?.losses || 0;
     const winRate = wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
 
-    const versionsRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-    const versions = await versionsRes.json();
-    const latestPatch = versions[0] || '16.13.1';
+    let latestPatch = '16.13.1';
+    try {
+      const versionsRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json', {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (versionsRes.ok) {
+        const versions = await versionsRes.json();
+        latestPatch = versions[0] || latestPatch;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch ddragon versions, using fallback:', e);
+    }
 
     const lp = activeSolo?.leaguePoints || 0;
     const ladder = calculateLadderStats(activeSolo?.tier || 'UNRANKED', activeSolo?.rank || '', lp, server);

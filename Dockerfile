@@ -2,6 +2,7 @@
 FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 # 2. Dependencies Stage
 FROM base AS deps
@@ -28,6 +29,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3006
 ENV HOSTNAME="0.0.0.0"
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
