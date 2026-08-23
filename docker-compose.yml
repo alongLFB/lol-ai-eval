@@ -9,7 +9,10 @@ services:
     ports:
       - "${PORT:-3006}:${PORT:-3006}"
     env_file:
-      - .env
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
     environment:
       - NODE_ENV=production
       - PORT=${PORT:-3006}
