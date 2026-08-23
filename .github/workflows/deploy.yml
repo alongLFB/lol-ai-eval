@@ -60,30 +60,14 @@ jobs:
               echo "==> No GitHub Secrets .env configured, keeping existing server .env..."
             fi
 
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-            # 从 .env.local 或 .env 提取端口 (支持 APP_PORT 或 PORT)，默认 3006
-            APP_PORT=3006
-            ENV_FILE=""
-            if [ -f ".env.local" ]; then
-              ENV_FILE=".env.local"
-            elif [ -f ".env" ]; then
-              ENV_FILE=".env"
+            # 停止可能存在的历史 PM2 进程（若有）
+            if command -v pm2 &> /dev/null; then
+              pm2 stop lol-ai-eval || true
+              pm2 delete lol-ai-eval || true
             fi
 
-            if [ -n "$ENV_FILE" ]; then
-              EXTRACTED_PORT=$(grep -E '^(APP_PORT|PORT)=' "$ENV_FILE" | head -n 1 | cut -d '=' -f2 | tr -d '\r" ' || true)
-              if [ -n "$EXTRACTED_PORT" ]; then
-                APP_PORT=$EXTRACTED_PORT
-              fi
-            fi
+            echo "==> Deploying with Docker Compose..."
+            docker compose down || true
+            docker compose up -d --build
+            docker image prune -f
 
-            echo "==> Building app with APP_PORT=$APP_PORT..."
-            rm -rf .next
-            rm -rf .cache
-            npm ci
-            npm run build
-
-            pm2 reload lol-ai-eval --update-env || pm2 start npm --name "lol-ai-eval" -- start -- -p $APP_PORT
-            pm2 save

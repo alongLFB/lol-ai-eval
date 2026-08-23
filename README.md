@@ -58,15 +58,45 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ---
 
-### 🚀 Deployment Guide (GitHub Actions + PM2)
+### 🐳 Docker Deployment Guide
+
+#### 1. Quick Start with Docker Compose (Recommended)
+Make sure you have created your `.env` file from `.env.example`:
+```bash
+cp .env.example .env
+# Edit .env and fill in your RIOT_API_KEY and AI_API_KEY
+```
+
+Build and run in the background:
+```bash
+docker compose up -d --build
+```
+The application will be accessible at [http://localhost:3006](http://localhost:3006).
+
+To stop the container:
+```bash
+docker compose down
+```
+
+#### 2. Manual Docker Build & Run
+```bash
+# Build the Docker image
+docker build -t lol-ai-eval .
+
+# Run container with environment variables file
+docker run -d --name lol-ai-eval -p 3006:3006 --env-file .env lol-ai-eval
+```
+
+---
+
+### 🚀 CI/CD Server Deployment (GitHub Actions + Docker)
 
 A preconfigured GitHub Actions workflow (`.github/workflows/deploy.yml`) is available to deploy updates automatically when code is pushed to the `master` branch.
 
 #### 1. Server Setup
 Ensure your server has the following installed:
 *   Git
-*   NVM & Node.js
-*   PM2 (`npm install -g pm2`)
+*   Docker & Docker Compose
 
 #### 2. Repository Secrets
 Under your GitHub Repository **Settings** -> **Secrets and variables** -> **Actions**, add:
@@ -74,7 +104,7 @@ Under your GitHub Repository **Settings** -> **Secrets and variables** -> **Acti
 *   `SERVER_USER`: Server username (e.g., `root`, `ubuntu`).
 *   `SERVER_SSH_KEY`: Private SSH Key contents used to access the server.
 *   `SERVER_PORT`: SSH port (default: 22).
-*   `ENV_FILE`: Copy all contents of your local `.env.local` file. The deployment runner will dynamically generate the environment file on the server.
+*   `ENV_FILE`: Copy all contents of your `.env` file. The deployment runner will dynamically generate the environment file on the server.
 
 ---
 
@@ -98,7 +128,7 @@ Under your GitHub Repository **Settings** -> **Secrets and variables** -> **Acti
     *   展示英雄等级、出装、技能、KDA、CS、对英雄造成的伤害（带有直观的伤害进度条）。
     *   **智能大厅段位检测**：点击展开时，异步并行拉取 10 位玩家的实时段位，计算并显示该场对局的**平均段位**及个人的段位等级。
 *   **📸 战绩大字报分享**：一键生成高清晰度 PNG 分享长图，包含 AI 裁决与精美战绩，方便炫耀分享至社交平台。
-*   **⚡ 自动化部署 CI/CD**：内置 GitHub Actions 工作流，支持代码推送至 `master` 分支后自动通过 PM2 部署至云服务器。
+*   **⚡ 自动化部署 CI/CD**：内置 GitHub Actions 工作流，支持代码推送至 `master` 分支后自动通过 Docker Compose 部署至云服务器。
 
 ---
 
@@ -121,7 +151,7 @@ cp .env.example .env.local
 然后在 `.env.local` 中填入你的 API 密钥信息：
 *   `RIOT_API_KEY`: Riot Games 开发者 API 密钥
 *   `AI_API_KEY`: 你的 OpenAI 或 DeepSeek 等兼容平台的 API 密钥
-*   `AI_BASE_URL`: AI 接口 of 你的 AI 供应商
+*   `AI_BASE_URL`: AI 接口服务地址
 *   `AI_MODEL`: 使用的 AI 模型名称
 
 #### 4. 启动开发服务器
@@ -132,15 +162,50 @@ npm run dev
 
 ---
 
-### 🚀 部署指南 (GitHub Actions + PM2)
+### 🐳 Docker 容器化部署指南
 
-项目已配置好 GitHub Actions 工作流（`.github/workflows/deploy.yml`），当代码 push 到 `master` 分支时会自动触发部署。
+#### 1. Docker Compose 一键启动（推荐）
+配置好 `.env` 文件后，在项目根目录运行：
+```bash
+# 构建并后台启动容器
+docker compose up -d --build
+```
+启动成功后，访问 [http://localhost:3006](http://localhost:3006) 即可。
+
+查看运行日志：
+```bash
+docker compose logs -f
+```
+
+停止容器：
+```bash
+docker compose down
+```
+
+#### 2. 原生 Docker 命令构建与运行
+```bash
+# 构建镜像
+docker build -t lol-ai-eval .
+
+# 启动容器并挂载环境变量
+docker run -d \
+  --name lol-ai-eval \
+  -p 3006:3006 \
+  --env-file .env \
+  --restart unless-stopped \
+  lol-ai-eval
+```
+
+---
+
+### 🚀 CI/CD 自动部署指南 (GitHub Actions + Docker)
+
+项目已配置好 GitHub Actions 工作流（`.github/workflows/deploy.yml`），当代码 push 到 `master` 分支时会自动触发 Docker 构建与部署。
 
 #### 1. 服务器准备工作
-为了使自动部署生效，你的目标服务器（Ubuntu/CentOS 等）需要安装：
+为了使自动部署生效，你的目标服务器（Ubuntu/Debian/CentOS 等）需要安装：
 *   Git
-*   NVM (Node Version Manager) & Node.js
-*   PM2 (`npm install -g pm2`)
+*   Docker & Docker Compose
 
 #### 2. GitHub 仓库 Secrets 配置
 进入你的 GitHub 仓库 -> **Settings** -> **Secrets and variables** -> **Actions**，点击 **New repository secret** 依次添加以下 Secrets：
@@ -148,4 +213,5 @@ npm run dev
 *   `SERVER_USER`: 登录服务器的用户名（如 root、ubuntu）
 *   `SERVER_SSH_KEY`: 用于登录服务器的 SSH 私钥（`~/.ssh/id_rsa` 的内容）
 *   `SERVER_PORT`: SSH 端口（可选，默认为 22）
-*   `ENV_FILE`: （**重要**）你的完整环境变量内容。将你本地 `.env.local` 的所有内容复制并粘贴 to 这个 secret 里。自动部署脚本会在服务器上动态生成 `.env.local` 文件。
+*   `ENV_FILE`: （**重要**）你的完整环境变量内容。将你本地 `.env` 的所有内容复制并粘贴到此 Secret 中。自动部署脚本会在服务器上动态生成 `.env` 文件。
+
