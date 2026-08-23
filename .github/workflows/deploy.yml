@@ -29,7 +29,7 @@ jobs:
           fi
 
       - name: SSH and Deploy
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         env:
           ENV_B64: ${{ steps.env_prep.outputs.ENV_B64 }}
           HAS_ENV: ${{ steps.env_prep.outputs.HAS_ENV }}
@@ -38,36 +38,49 @@ jobs:
           username: ${{ secrets.SERVER_USER }} # 服务器用户名
           key: ${{ secrets.SERVER_SSH_KEY }}   # 服务器私钥
           port: ${{ secrets.SERVER_PORT || 22 }}
+          timeout: 15m
+          command_timeout: 15m
           envs: ENV_B64,HAS_ENV
           script: |
+            set -euo pipefail
             mkdir -p ~/github
             cd ~/github
             
             if [ ! -d "lol-ai-eval" ]; then
+              echo "==> Repository not found locally. Cloning..."
               git clone https://github.com/alongLFB/lol-ai-eval.git
-              cd lol-ai-eval
-            else
-              cd lol-ai-eval
-              git fetch origin master
-              git reset --hard origin/master
             fi
+            cd lol-ai-eval
+            
+            echo "==> Pulling latest master code..."
+            git fetch origin master
+            git reset --hard origin/master
 
-            # 如果在 GitHub Secrets 中配置了 DOT_ENV 或 ENV_FILE，则同步写入服务器 .env；否则保留服务器原有配置
-            if [ "$HAS_ENV" = "1" ] && [ -n "$ENV_B64" ]; then
+            # 如果在 GitHub Secrets 中配置了 ENV_FILE 或 DOT_ENV，则同步写入服务器 .env；否则保留服务器原有配置
+            if [ "${HAS_ENV:-0}" = "1" ] && [ -n "${ENV_B64:-}" ]; then
               echo "==> Updating .env from GitHub Secrets..."
               echo "$ENV_B64" | base64 -d > .env
+              chmod 600 .env || true
             else
               echo "==> No GitHub Secrets .env configured, keeping existing server .env..."
             fi
 
             # 停止可能存在的历史 PM2 进程（若有）
             if command -v pm2 &> /dev/null; then
-              pm2 stop lol-ai-eval || true
-              pm2 delete lol-ai-eval || true
+              pm2 stop lol-ai-eval 2>/dev/null || true
+              pm2 delete lol-ai-eval 2>/dev/null || true
             fi
 
             echo "==> Deploying with Docker Compose..."
-            docker compose down || true
+            docker compose down 2>/dev/null || true
             docker compose up -d --build
+
+            echo "==> Verifying container status..."
+            sleep 5
+            docker compose ps
+
+            echo "==> Cleaning up dangling images..."
             docker image prune -f
+
+            echo "==> Deployment completed successfully!"
 
