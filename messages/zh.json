@@ -27,6 +27,9 @@
     "connecting": "连接中...",
     "insight": "神谕洞察",
     "clear": "清空输入",
+    "historyTitle": "搜索历史",
+    "clearHistory": "清空",
+    "deleteHistoryItem": "删除记录",
     "servers": {
 
       "EUW": "欧洲西部",

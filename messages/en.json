@@ -27,6 +27,9 @@
     "connecting": "Connecting...",
     "insight": "Insight",
     "clear": "Clear input",
+    "historyTitle": "Recent Searches",
+    "clearHistory": "Clear All",
+    "deleteHistoryItem": "Delete item",
     "servers": {
 
       "EUW": "Europe West",
