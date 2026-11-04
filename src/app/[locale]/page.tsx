@@ -259,7 +259,7 @@ function HomeContent() {
 
   return (
     <div className="relative z-10 w-full overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-20 relative w-full">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 py-8 md:py-20 relative w-full">
         {/* Hero Section */}
         <div className="text-center mb-10">
           {/* Top Pill */}
@@ -443,7 +443,7 @@ function HomeContent() {
             {/* Shareable Poster Container */}
             <div
               id="share-container"
-              className="p-4 sm:p-8 rounded-3xl bg-[#030712] border border-slate-800/90 shadow-[0_10px_50px_rgba(0,0,0,0.8)] relative cyber-corners"
+              className="p-2 sm:p-8 rounded-2xl sm:rounded-3xl bg-[#030712] border border-slate-800/90 shadow-[0_10px_50px_rgba(0,0,0,0.8)] relative cyber-corners"
             >
               <AIEvaluation text={data.evaluation} />
               <div className="mt-8">

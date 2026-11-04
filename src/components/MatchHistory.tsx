@@ -193,6 +193,188 @@ function MatchDetailPanel({
     ? (rankData?.soloAverageRank || rankData?.averageRank || '')
     : (rankData?.flexAverageRank || rankData?.averageRank || '');
 
+  const renderMobileTeamList = (team: EnrichedParticipant[], teamLabel: string, won: boolean) => (
+    <div className="w-full space-y-2">
+      {/* Team Header */}
+      <div className={cn(
+        "flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-bold",
+        won ? "bg-blue-900/30 text-blue-300 border border-blue-800/40" : "bg-red-900/30 text-red-300 border border-red-800/40"
+      )}>
+        <span className="flex items-center gap-1.5">
+          <span className={cn("w-2 h-2 rounded-full", won ? "bg-blue-400" : "bg-red-400")} />
+          {won ? t('victory') : t('defeat')} ({teamLabel})
+        </span>
+        <span className="text-[10px] font-mono text-gray-400 font-normal">
+          {team.reduce((acc, p) => acc + p.kills, 0)} Total Kills
+        </span>
+      </div>
+
+      {/* Participant Cards (Full width, zero horizontal scroll, pure vertical stacking) */}
+      <div className="space-y-1.5">
+        {team.map((p, idx) => {
+          const isMe = currentPuuid ? p.puuid === currentPuuid : false;
+          const pRank = rankData?.ranks[p.puuid];
+          let displayTier = pRank?.tier || 'UNRANKED';
+          let displayRank = pRank?.rank || '';
+          if (rankMode === 'solo' && pRank?.soloTier) {
+            displayTier = pRank.soloTier;
+            displayRank = pRank.soloRank || '';
+          } else if (rankMode === 'flex' && pRank?.flexTier) {
+            displayTier = pRank.flexTier;
+            displayRank = pRank.flexRank || '';
+          }
+
+          const handleOpenPlayer = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            const name = p.playerName || p.championName;
+            const tag = p.playerTag || server;
+            const targetId = `${name}#${tag}`;
+            const targetUrl = `/${locale}?summoner=${encodeURIComponent(targetId)}&server=${encodeURIComponent(server)}`;
+            window.open(targetUrl, '_blank');
+          };
+
+          return (
+            <div
+              key={p.puuid + idx}
+              className={cn(
+                "p-2.5 rounded-xl border transition-all text-xs",
+                isMe
+                  ? (won ? "bg-blue-950/40 border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.15)]" : "bg-red-950/40 border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]")
+                  : "bg-slate-900/70 border-slate-800/80"
+              )}
+            >
+              {/* Row 1: Player info + KDA */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {/* Champion avatar with level */}
+                  <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-gray-700 shrink-0">
+                    <img
+                      crossOrigin="anonymous"
+                      src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/champion/${p.championName}.png`}
+                      alt={p.championName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/-1.png';
+                      }}
+                    />
+                    <span className="absolute bottom-0 right-0 text-[8px] bg-black/85 px-0.5 font-bold leading-tight rounded-tl text-slate-200">
+                      {p.champLevel}
+                    </span>
+                  </div>
+
+                  {/* Spells */}
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner1Id, patch)} alt="" className="w-3.5 h-3.5 rounded-sm" />
+                    <img crossOrigin="anonymous" src={getSummonerSpellUrl(p.summoner2Id, patch)} alt="" className="w-3.5 h-3.5 rounded-sm" />
+                  </div>
+
+                  {/* Name & Tier */}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <div
+                      onClick={handleOpenPlayer}
+                      className="flex items-center gap-1 cursor-pointer truncate"
+                    >
+                      <span className={cn(
+                        "font-bold truncate text-[11px]",
+                        isMe ? "text-cyan-300" : "text-slate-200 hover:text-cyan-400"
+                      )}>
+                        {p.playerName || p.championName}
+                      </span>
+                      {isMe && (
+                        <span className="px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-300 text-[9px] font-mono shrink-0">
+                          YOU
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] truncate">
+                      {rankData?.loading ? (
+                        <span className="text-slate-500">...</span>
+                      ) : pRank ? (
+                        <span className={cn("font-semibold", getTierColor(displayTier))}>
+                          {formatTierShort(displayTier, displayRank)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600">-</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* KDA & Ratio */}
+                <div className="text-right shrink-0">
+                  <div className="font-mono font-bold text-slate-100 text-[11px]">
+                    {p.kills} <span className="text-slate-500 font-normal">/</span> <span className="text-rose-400">{p.deaths}</span> <span className="text-slate-500 font-normal">/</span> {p.assists}
+                  </div>
+                  <div className="text-[9px] text-slate-400 font-mono">
+                    {formatKDA(p.kills, p.deaths, p.assists)} KDA
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Metrics (Damage bar, CS, Vision) + Full 8 Items */}
+              <div className="mt-2 pt-1.5 border-t border-slate-800/60 flex flex-wrap items-center justify-between gap-1.5">
+                {/* Items: 8 slots (6 items + trinket + 8th slot) */}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {p.items.slice(0, 6).map((itemId, i) => (
+                    <div key={i} className="w-5.5 h-5.5 rounded-sm overflow-hidden bg-slate-800 border border-slate-700/50 shrink-0">
+                      {itemId > 0 ? (
+                        <img
+                          crossOrigin="anonymous"
+                          src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/item/${itemId}.png`}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : null}
+                    </div>
+                  ))}
+                  {/* Trinket */}
+                  <div className="w-5.5 h-5.5 rounded-full overflow-hidden bg-slate-800 border border-slate-700/50 shrink-0 ml-0.5">
+                    {(p.items[6] || 0) > 0 ? (
+                      <img
+                        crossOrigin="anonymous"
+                        src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/item/${p.items[6]}.png`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  {/* 8th Slot */}
+                  <div className="w-5.5 h-5.5 rounded-full overflow-hidden bg-slate-800 border border-slate-700/50 shrink-0">
+                    {(p.items[7] || 0) > 0 ? (
+                      <img
+                        crossOrigin="anonymous"
+                        src={`https://ddragon.leagueoflegends.com/cdn/${patch}/img/item/${p.items[7]}.png`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Damage & CS & Vision stats */}
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-300">
+                  <div className="flex items-center gap-1">
+                    <span>{(p.totalDamageDealtToChampions / 1000).toFixed(1)}k</span>
+                    <div className="w-7 h-1 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className={cn("h-full rounded-full", won ? "bg-cyan-500" : "bg-rose-500")}
+                        style={{ width: `${(p.totalDamageDealtToChampions / maxDamage) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-slate-600">•</span>
+                  <span>{p.cs} CS</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-400">👁 {p.visionScore}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   const renderTeamTable = (team: EnrichedParticipant[], teamLabel: string, won: boolean) => (
     <div className="w-full">
       <div className={cn(
@@ -876,7 +1058,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
       </div>
 
       {/* ── Game Mode Tab Filters ── */}
-      <div className="flex border-b border-gray-800 gap-1 overflow-x-auto pb-px">
+      <div className="grid grid-cols-4 sm:flex border-b border-gray-800 gap-1 pb-px">
         {[
           { id: 'ALL', label: t('tabs.ALL') },
           { id: 'SOLO', label: t('tabs.SOLO') },

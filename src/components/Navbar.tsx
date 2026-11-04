@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Trophy, Swords, Sparkles, Activity } from 'lucide-react';
+import { Trophy, Swords } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { SoundToggle } from './SoundToggle';
 import { sound } from '@/lib/sound';
@@ -18,13 +18,13 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/75 backdrop-blur-xl transition-all shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-1 sm:gap-2">
         {/* Brand / Logo */}
         <Link 
           href={`/${locale}`}
           onClick={() => sound.playClick()}
           onMouseEnter={() => sound.playHover()}
-          className="group flex items-center gap-2.5 text-lg sm:text-xl font-black tracking-tight"
+          className="group flex items-center gap-2 sm:gap-2.5 text-base sm:text-xl font-black tracking-tight shrink-0"
         >
           <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 via-blue-600/30 to-purple-600/20 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all">
             <Swords className="w-4 h-4 text-cyan-300 transition-transform group-hover:rotate-12 duration-300" />
@@ -72,7 +72,7 @@ export function Navbar() {
         </nav>
 
         {/* Right Tools: Live Status + Sound Toggle + Language Switcher */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Subtle Live Server Indicator */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-[11px] font-mono text-slate-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />

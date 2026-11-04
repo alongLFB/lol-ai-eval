@@ -57,13 +57,12 @@ export function AIEvaluation({ text }: { text: string }) {
   // Typewriter effect
   useEffect(() => {
     let i = 0;
-    setDisplayedText('');
-    setIsTyping(true);
     const chars = Array.from(text);
+
     const timer = setInterval(() => {
       if (i < chars.length) {
         const char = chars[i];
-        setDisplayedText((prev) => prev + char);
+        setDisplayedText((prev) => (i === 0 ? char : prev + char));
         i++;
       } else {
         setIsTyping(false);
@@ -130,13 +129,13 @@ export function AIEvaluation({ text }: { text: string }) {
     >
       <SpotlightCard
         spotlightColor="rgba(192, 132, 252, 0.15)"
-        className={`relative overflow-hidden border border-slate-800/90 bg-slate-950/85 p-6 sm:p-8 backdrop-blur-2xl cyber-corners ${tone.glow}`}
+        className={`relative overflow-hidden border border-slate-800/90 bg-slate-950/85 p-4 sm:p-8 backdrop-blur-2xl cyber-corners ${tone.glow}`}
       >
         {/* Ambient Top Glow Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/60 to-transparent" />
 
         {/* Oracle Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-800/70 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 border-b border-slate-800/70 pb-3 sm:pb-4">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 via-purple-500/30 to-cyan-500/20 border border-purple-500/40 shadow-inner">
               <Bot className="w-5 h-5 text-purple-300" />
@@ -221,7 +220,7 @@ export function AIEvaluation({ text }: { text: string }) {
         </div>
 
         {/* Oracle Chamber Speech Text */}
-        <div className="relative min-h-[90px] pl-6 border-l-2 border-purple-500/40 my-2">
+        <div className="relative min-h-[80px] pl-4 sm:pl-6 border-l-2 border-purple-500/40 my-2">
           <Quote className="absolute -left-3 top-0 w-5 h-5 text-purple-500/50 bg-slate-950 rounded-full p-0.5" />
           <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-sans font-medium tracking-normal">
             {displayedText}
