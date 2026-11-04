@@ -19,7 +19,14 @@
     "copySuccessDesc": "大字报图片已存入剪贴板，可直接粘贴分享！"
   },
   "AIEvaluation": {
-    "title": "神谕 AI 裁决"
+    "title": "神谕 AI 裁决",
+    "listen": "神谕宣读",
+    "stopListen": "停止宣读",
+    "copyText": "复制裁决",
+    "copied": "已复制",
+    "toneRoast": "虚空毒舌审判",
+    "tonePraise": "天界传奇赞颂",
+    "toneNeutral": "均衡之令裁决"
   },
   "SearchBar": {
     "placeholder": "游戏ID#TAG (例如: CatchingTheFire#EUW)",
@@ -31,7 +38,6 @@
     "clearHistory": "清空",
     "deleteHistoryItem": "删除记录",
     "servers": {
-
       "EUW": "欧洲西部",
       "ME": "中东",
       "NA": "北美",
@@ -53,7 +59,6 @@
     "showFlexRank": "灵活组排段位",
     "openInNewTab": "在新标签页查看战绩",
     "loadingRanks": "加载段位信息...",
-
     "recentlyPlayed": "最近玩过",
     "frequentTeammates": "经常同队 (合作 2 次及以上)",
     "noFrequentTeammates": "最近 20 场对局中没有同队合作过 2 次及以上的队友",
@@ -139,7 +144,11 @@
   },
   "Navigation": {
     "home": "战绩神谕",
-    "leaderboards": "梯队排行榜"
+    "leaderboards": "梯队排行榜",
+    "soundEnable": "开启音效",
+    "soundMute": "关闭音效",
+    "quickSearchLabel": "热门召唤师:",
+    "riotApiOnline": "Riot API 在线"
   },
   "Leaderboards": {
     "title": "大区梯队排行榜",

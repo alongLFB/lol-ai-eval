@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, Globe, ChevronDown, X, History, Trash2, Clock } from 'lucide-react';
+import { useState, useRef, useCallback, useSyncExternalStore } from 'react';
+import { Search, Loader2, Globe, ChevronDown, X, History, Trash2, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { sound } from '@/lib/sound';
+import { SpotlightCard } from './SpotlightCard';
 
 export interface SearchHistoryItem {
   id: string;
@@ -24,65 +26,56 @@ const SERVER_IDS = ['EUW', 'ME', 'NA', 'KR', 'TW'] as const;
 const STORAGE_KEY = 'lol_search_history';
 const MAX_HISTORY_ITEMS = 30;
 
+// Curated pro / famous summoners for instant 1-click test drive
+const PRO_SUMMONERS = [
+  { gameName: 'Hide on bush', tagLine: 'KR1', server: 'KR', label: 'Faker' },
+  { gameName: 'Caps', tagLine: 'EUW', server: 'EUW', label: 'Caps' },
+  { gameName: 'ShowMaker', tagLine: 'KR1', server: 'KR', label: 'ShowMaker' },
+  { gameName: 'Bo', tagLine: 'EUW', server: 'EUW', label: 'Bo' },
+  { gameName: 'Doublelift', tagLine: 'NA1', server: 'NA', label: 'Doublelift' },
+];
+
+let cachedHistory: SearchHistoryItem[] = [];
+let cachedRaw: string | null = null;
+
+function getStoredHistory(): SearchHistoryItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === cachedRaw && cachedRaw !== null) {
+      return cachedHistory;
+    }
+    cachedRaw = raw;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        cachedHistory = parsed;
+        return parsed;
+      }
+    }
+  } catch {}
+  return [];
+}
+
+const emptySubscribe = () => () => {};
+
 export function SearchBar({ onSearch, isLoading, initialValue = '', initialServer = 'EUW' }: SearchBarProps) {
   const t = useTranslations('SearchBar');
+  const tNav = useTranslations('Navigation');
   const [input, setInput] = useState(initialValue);
   const [server, setServer] = useState<string>(initialServer);
-  const [history, setHistory] = useState<SearchHistoryItem[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  const [historyList, setHistoryList] = useState<SearchHistoryItem[]>(() => getStoredHistory());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Hydrate search history from localStorage on client mount
-  useEffect(() => {
-    setIsMounted(true);
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setHistory(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load search history:', e);
-    }
-  }, []);
-
-  // Click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Sync state when initial props update (e.g. from leaderboard jump)
-  useEffect(() => {
-    if (initialValue) {
-      setInput(initialValue);
-      if (initialValue.includes('#')) {
-        const [g, tag] = initialValue.split('#');
-        if (g && tag) {
-          saveToHistory(g, tag, initialServer || 'EUW');
-        }
-      }
-    }
-  }, [initialValue, initialServer]);
-
-  useEffect(() => {
-    if (initialServer) {
-      setServer(initialServer);
-    }
-  }, [initialServer]);
 
   const saveToHistory = useCallback((gameName: string, tagLine: string, srv: string) => {
     const cleanGame = gameName.trim();
@@ -99,7 +92,7 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
       timestamp: Date.now(),
     };
 
-    setHistory((prev) => {
+    setHistoryList((prev) => {
       const filtered = prev.filter(
         (item) => `${item.gameName.toLowerCase()}#${item.tagLine.toLowerCase()}@${item.server.toLowerCase()}` !== key
       );
@@ -117,13 +110,13 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    // Parse ID like "CatchingTheFire#EUW"
     const [gameName, tagLine] = input.split('#');
     if (!gameName || !tagLine) {
       alert(t('formatError'));
       return;
     }
 
+    sound.playOracle();
     saveToHistory(gameName, tagLine, server);
     setIsOpen(false);
     onSearch(gameName.trim(), tagLine.trim(), server);
@@ -131,6 +124,7 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
 
   const handleSelectHistory = (item: SearchHistoryItem) => {
     if (isLoading) return;
+    sound.playClick();
     setInput(`${item.gameName}#${item.tagLine}`);
     setServer(item.server);
     saveToHistory(item.gameName, item.tagLine, item.server);
@@ -138,9 +132,21 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
     onSearch(item.gameName, item.tagLine, item.server);
   };
 
+  const handleSelectPro = (pro: typeof PRO_SUMMONERS[0]) => {
+    if (isLoading) return;
+    sound.playClick();
+    const fullId = `${pro.gameName}#${pro.tagLine}`;
+    setInput(fullId);
+    setServer(pro.server);
+    saveToHistory(pro.gameName, pro.tagLine, pro.server);
+    setIsOpen(false);
+    onSearch(pro.gameName, pro.tagLine, pro.server);
+  };
+
   const handleDeleteHistoryItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setHistory((prev) => {
+    sound.playClick();
+    setHistoryList((prev) => {
       const updated = prev.filter((item) => item.id !== id);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -153,7 +159,8 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
 
   const handleClearAllHistory = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setHistory([]);
+    sound.playClick();
+    setHistoryList([]);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (err) {
@@ -162,6 +169,7 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
   };
 
   const handleClear = () => {
+    sound.playClick();
     setInput('');
     inputRef.current?.focus();
   };
@@ -183,61 +191,55 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
     }
   };
 
-  const formatTimestamp = (ts: number) => {
-    if (!ts) return '';
-    const diff = Date.now() - ts;
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return '刚刚';
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
-  };
-
   return (
     <div ref={containerRef} className="w-full max-w-3xl mx-auto relative">
-      {/* Search Input Form */}
-      <form onSubmit={handleSubmit} className="relative group">
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-        <div className="relative flex flex-col sm:flex-row items-center bg-gray-900/90 rounded-xl border border-gray-800 p-2 shadow-2xl backdrop-blur-sm gap-2 sm:gap-0">
-          
-          <div className="flex items-center w-full sm:w-auto pl-3 pr-2 border-b sm:border-b-0 sm:border-r border-gray-700 pb-2 sm:pb-0 pt-1 sm:pt-0">
-            <Globe className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
+      {/* Spotlight Wrapped Search Card */}
+      <SpotlightCard
+        spotlightColor="rgba(56, 189, 248, 0.15)"
+        className="border-slate-800/90 bg-slate-900/80 p-2 shadow-[0_10px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl cyber-corners"
+      >
+        <form onSubmit={handleSubmit} className="relative flex flex-col sm:flex-row items-center gap-2 sm:gap-0">
+          {/* Server Selector */}
+          <div className="flex items-center w-full sm:w-auto pl-3 pr-2 border-b sm:border-b-0 sm:border-r border-slate-700/60 pb-2 sm:pb-0 pt-1 sm:pt-0">
+            <Globe className="w-4 h-4 text-cyan-400 mr-2 shrink-0 animate-pulse" />
             <div className="relative w-full sm:w-auto">
               <select 
                 value={server} 
-                onChange={(e) => setServer(e.target.value)}
-                className="bg-transparent text-white outline-none appearance-none cursor-pointer text-base sm:text-sm font-bold w-full pr-7"
+                onChange={(e) => {
+                  sound.playClick();
+                  setServer(e.target.value);
+                }}
+                className="bg-transparent text-white outline-none appearance-none cursor-pointer text-sm font-bold w-full pr-6 tracking-wide"
                 disabled={isLoading}
               >
                 {SERVER_IDS.map((id) => (
-                  <option key={id} value={id} className="bg-gray-800 text-gray-100">
+                  <option key={id} value={id} className="bg-slate-900 text-slate-100">
                     {t(`servers.${id}`)}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-blue-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-cyan-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
+          {/* Riot ID Input */}
           <div className="relative flex-1 flex items-center w-full">
             <input
               ref={inputRef}
               type="text"
               value={input}
               onFocus={() => {
-                if (history.length > 0) setIsOpen(true);
+                if (historyList.length > 0) setIsOpen(true);
               }}
               onClick={() => {
-                if (history.length > 0) setIsOpen(true);
+                if (historyList.length > 0) setIsOpen(true);
               }}
               onChange={(e) => {
                 setInput(e.target.value);
-                if (history.length > 0) setIsOpen(true);
+                if (historyList.length > 0) setIsOpen(true);
               }}
               placeholder={t('placeholder')}
-              className="w-full bg-transparent border-none outline-none text-gray-100 pl-4 pr-16 py-3 sm:py-2 placeholder-gray-500 text-base sm:text-lg"
+              className="w-full bg-transparent border-none outline-none text-slate-100 pl-4 pr-16 py-2.5 placeholder-slate-500 text-sm sm:text-base font-medium"
               disabled={isLoading}
             />
 
@@ -246,20 +248,23 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="p-1 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 transition-all cursor-pointer"
+                  className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
                   title={t('clear')}
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
 
-              {isMounted && history.length > 0 && (
+              {isMounted && historyList.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setIsOpen((prev) => !prev)}
+                  onClick={() => {
+                    sound.playClick();
+                    setIsOpen((prev) => !prev);
+                  }}
                   className={cn(
-                    "p-1.5 rounded-lg text-gray-400 hover:text-blue-300 hover:bg-gray-800 transition-all cursor-pointer",
-                    isOpen && "text-blue-400 bg-gray-800"
+                    "p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 transition-all cursor-pointer",
+                    isOpen && "text-cyan-400 bg-slate-800"
                   )}
                   title={t('historyTitle')}
                 >
@@ -269,48 +274,72 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
             </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
+            onMouseEnter={() => sound.playHover()}
             className={cn(
-              "w-full sm:w-auto px-6 py-3 sm:py-2 rounded-lg font-semibold text-white transition-all justify-center cursor-pointer",
-              "bg-blue-600 hover:bg-blue-500 flex items-center gap-2",
-              isLoading && "opacity-70 cursor-not-allowed bg-blue-800 hover:bg-blue-800"
+              "w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-sm tracking-wide text-white transition-all justify-center cursor-pointer shadow-lg",
+              "bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 hover:shadow-cyan-500/25 flex items-center gap-2",
+              "active:scale-95 duration-150",
+              isLoading && "opacity-70 cursor-not-allowed bg-slate-800 hover:bg-slate-800"
             )}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-200" />
                 <span>{t('connecting')}</span>
               </>
             ) : (
               <>
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4" />
                 <span>{t('insight')}</span>
               </>
             )}
           </button>
-        </div>
-      </form>
+        </form>
+      </SpotlightCard>
+
+      {/* 1-Click Pro Summoner Quick Selection Chips */}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
+        <span className="text-slate-400 flex items-center gap-1 font-mono text-[11px] select-none">
+          <Sparkles className="w-3 h-3 text-cyan-400" />
+          {tNav('quickSearchLabel')}
+        </span>
+        {PRO_SUMMONERS.map((pro) => (
+          <button
+            key={`${pro.gameName}-${pro.server}`}
+            onClick={() => handleSelectPro(pro)}
+            onMouseEnter={() => sound.playHover()}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <span className="text-[10px] font-mono px-1 rounded bg-slate-800/80 text-cyan-400">
+              {pro.server}
+            </span>
+            <span className="font-semibold">{pro.label}</span>
+          </button>
+        ))}
+      </div>
 
       {/* Vertical Scrolling Search History Dropdown */}
-      {isMounted && isOpen && history.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-gray-900/95 border border-gray-800/90 rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-          
+      {isMounted && isOpen && historyList.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-slate-950/95 border border-slate-800/90 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-gray-950/70 border-b border-gray-800/80">
-            <div className="flex items-center gap-2 text-xs font-semibold text-gray-300 select-none">
-              <History className="w-3.5 h-3.5 text-blue-400" />
+          <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/80 border-b border-slate-800/80">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 select-none">
+              <History className="w-3.5 h-3.5 text-cyan-400" />
               <span>{t('historyTitle')}</span>
-              <span className="text-[10px] text-gray-400 bg-gray-800 border border-gray-700/60 px-1.5 py-0.5 rounded-full font-mono">
-                {history.length}
+              <span className="text-[10px] text-slate-400 bg-slate-800 border border-slate-700/60 px-1.5 py-0.5 rounded-full font-mono">
+                {historyList.length}
               </span>
             </div>
             
             <button
               type="button"
               onClick={handleClearAllHistory}
-              className="text-gray-400 hover:text-red-400 text-xs flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-red-500/10 cursor-pointer select-none"
+              className="text-slate-400 hover:text-rose-400 text-xs flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-rose-500/10 cursor-pointer select-none"
               title={t('clearHistory')}
             >
               <Trash2 className="w-3 h-3" />
@@ -319,17 +348,16 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
           </div>
 
           {/* Vertical Scrollable List */}
-          <div 
-            className="max-h-64 sm:max-h-72 overflow-y-auto divide-y divide-gray-800/40 py-1 scrollbar-thin scrollbar-thumb-gray-700/70 hover:scrollbar-thumb-gray-600 scrollbar-track-transparent select-none"
-          >
-            {history.map((item) => (
+          <div className="max-h-64 sm:max-h-72 overflow-y-auto divide-y divide-slate-800/40 py-1 scrollbar-thin select-none">
+            {historyList.map((item) => (
               <div
                 key={item.id}
                 onClick={() => handleSelectHistory(item)}
-                className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/60 transition-colors group cursor-pointer"
+                onMouseEnter={() => sound.playHover()}
+                className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-800/60 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2.5 min-w-0 pr-3">
-                  <Clock className="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-400 transition-colors shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-colors shrink-0" />
                   
                   <span
                     className={cn(
@@ -341,26 +369,20 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
                   </span>
 
                   <div className="flex items-baseline gap-1 min-w-0 truncate">
-                    <span className="font-semibold text-gray-200 group-hover:text-blue-300 transition-colors truncate">
+                    <span className="font-semibold text-slate-200 group-hover:text-cyan-300 transition-colors truncate">
                       {item.gameName}
                     </span>
-                    <span className="text-xs text-gray-400 font-mono shrink-0">
+                    <span className="text-xs text-slate-400 font-mono shrink-0">
                       #{item.tagLine}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {item.timestamp && (
-                    <span className="text-[11px] text-gray-500 font-mono">
-                      {formatTimestamp(item.timestamp)}
-                    </span>
-                  )}
-
                   <button
                     type="button"
                     onClick={(e) => handleDeleteHistoryItem(item.id, e)}
-                    className="p-1 rounded-md text-gray-500 hover:text-red-400 hover:bg-gray-700/50 transition-all cursor-pointer opacity-70 group-hover:opacity-100"
+                    className="p-1 rounded-md text-slate-500 hover:text-rose-400 hover:bg-slate-700/50 transition-all cursor-pointer opacity-70 group-hover:opacity-100"
                     title={t('deleteHistoryItem')}
                   >
                     <X className="w-3.5 h-3.5" />
@@ -374,6 +396,3 @@ export function SearchBar({ onSearch, isLoading, initialValue = '', initialServe
     </div>
   );
 }
-
-
-

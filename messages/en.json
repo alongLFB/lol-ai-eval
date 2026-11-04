@@ -19,7 +19,14 @@
     "copySuccessDesc": "The poster image has been copied to your clipboard!"
   },
   "AIEvaluation": {
-    "title": "Oracle AI Verdict"
+    "title": "Oracle AI Verdict",
+    "listen": "Listen Oracle",
+    "stopListen": "Stop Audio",
+    "copyText": "Copy Verdict",
+    "copied": "Copied",
+    "toneRoast": "Void Roast",
+    "tonePraise": "Celestial Praise",
+    "toneNeutral": "Equinox Verdict"
   },
   "SearchBar": {
     "placeholder": "GameID#TAG (e.g. CatchingTheFire#EUW)",
@@ -31,7 +38,6 @@
     "clearHistory": "Clear All",
     "deleteHistoryItem": "Delete item",
     "servers": {
-
       "EUW": "Europe West",
       "ME": "Middle East",
       "NA": "North America",
@@ -53,7 +59,6 @@
     "showFlexRank": "Flex Rank",
     "openInNewTab": "View profile in new tab",
     "loadingRanks": "Loading Ranks...",
-
     "recentlyPlayed": "Recently Played",
     "frequentTeammates": "Frequent Teammates (2+ Matches)",
     "noFrequentTeammates": "No frequent teammates in the last 20 matches.",
@@ -139,7 +144,11 @@
   },
   "Navigation": {
     "home": "Oracle Evaluation",
-    "leaderboards": "Leaderboards"
+    "leaderboards": "Leaderboards",
+    "soundEnable": "Enable SFX",
+    "soundMute": "Mute SFX",
+    "quickSearchLabel": "Popular Summoners:",
+    "riotApiOnline": "Riot API Online"
   },
   "Leaderboards": {
     "title": "Server Leaderboards",

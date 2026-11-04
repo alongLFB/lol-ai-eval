@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { LeaderboardItem, LeaderboardStats } from '@/lib/riot';
+import { LeaderboardPodium } from '@/components/LeaderboardPodium';
+import { sound } from '@/lib/sound';
 import { 
   Trophy, 
   Flame, 
@@ -104,6 +106,7 @@ export default function LeaderboardsPage() {
   }, [currentServer, currentTier, currentPage, loadLeaderboard]);
 
   const handleServerChange = (server: string) => {
+    sound.playClick();
     setCurrentServer(server);
     setCurrentPage(1);
     setSearchQuery('');
@@ -111,18 +114,21 @@ export default function LeaderboardsPage() {
   };
 
   const handleTierChange = (tier: string) => {
+    sound.playClick();
     setCurrentTier(tier);
     setCurrentPage(1);
     setSearchQuery('');
   };
 
   const handlePageChange = (newPage: number) => {
+    sound.playClick();
     if (newPage < 1 || newPage > 10) return;
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleViewSummoner = (gameName: string, tagLine: string) => {
+    sound.playClick();
     const formatTag = tagLine ? tagLine.replace('#', '') : currentServer;
     const formattedId = `${encodeURIComponent(gameName)}-${encodeURIComponent(formatTag)}`;
     router.push(`/${locale}?summoner=${formattedId}&server=${currentServer}`);
@@ -369,6 +375,15 @@ export default function LeaderboardsPage() {
         {!isLoading && !error && (
           <div className="space-y-6">
             
+            {/* Top 3 Apex Podium Showcase (Page 1) */}
+            {currentPage === 1 && !searchQuery.trim() && entries.length >= 3 && (
+              <LeaderboardPodium
+                items={entries.slice(0, 3)}
+                onSelect={handleViewSummoner}
+                formatTierDisplay={formatTierDisplay}
+              />
+            )}
+
             {/* Desktop Table View (md+) */}
             <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40 shadow-2xl backdrop-blur-md">
               <div className="overflow-x-auto">
@@ -398,7 +413,8 @@ export default function LeaderboardsPage() {
                         return (
                           <tr
                             key={item.rank + item.puuid}
-                            className="hover:bg-slate-800/40 transition-colors group"
+                            className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                            onMouseEnter={() => sound.playHover()}
                           >
                             {/* Rank */}
                             <td className="py-3.5 px-4 text-center font-black">

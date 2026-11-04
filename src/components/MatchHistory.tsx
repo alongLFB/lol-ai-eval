@@ -8,6 +8,7 @@ import { Bot, Trophy, Swords, Shield, Target, ChevronDown, Eye, Crosshair, Star,
 import * as htmlToImage from 'html-to-image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
+import { sound } from '@/lib/sound';
 
 // ── Summoner Spell ID → Data Dragon key mapping ──
 const SUMMONER_SPELL_MAP: Record<number, string> = {
@@ -422,6 +423,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   const [matchAnalysisResults, setMatchAnalysisResults] = useState<Record<string, string>>({});
 
   const handleAnalyzeMatch = async (e: React.MouseEvent, match: EnrichedMatchData) => {
+    sound.playOracle();
     e.stopPropagation();
     if (expandedMatch !== match.matchId) {
       setExpandedMatch(match.matchId);
@@ -883,7 +885,9 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
         ].map(tab => (
           <button
             key={tab.id}
+            onMouseEnter={() => sound.playHover()}
             onClick={() => {
+              sound.playClick();
               setActiveTab(tab.id as any);
               setExpandedMatch(null);
             }}
@@ -1057,7 +1061,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               {/* Donut Chart */}
               <div className="flex items-center gap-4 justify-center sm:justify-start">
                 <div className="relative w-16 h-16 shrink-0">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" viewBox="0 0 36 36">
                     <path
                       className="text-red-600/20"
                       strokeWidth="3.5"
