@@ -40,6 +40,8 @@ export interface ParticipantDto {
   deaths: number;
   assists: number;
   win: boolean;
+  gameEndedInEarlySurrender?: boolean;
+  gameEndedInSurrender?: boolean;
   item0: number;
   item1: number;
   item2: number;
@@ -138,6 +140,7 @@ export interface EnrichedMatchData {
   deaths: number;
   assists: number;
   win: boolean;
+  isRemake?: boolean;
   damage: number;
   gameDuration: number;
   gameCreation: number;
@@ -461,7 +464,8 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
           score: calcMVPScore(p, teamKills),
         }));
         mvpScores.sort((a, b) => b.score - a.score);
-        const isMVP = participant.win && mvpScores[0]?.puuid === participant.puuid;
+        const isRemake = Boolean(participant.gameEndedInEarlySurrender && matchData.info.gameDuration < 300) || matchData.info.gameDuration < 240;
+        const isMVP = !isRemake && participant.win && mvpScores[0]?.puuid === participant.puuid;
 
         // Extract all participants for detail view
         const allParticipants = matchData.info.participants.map(p =>
@@ -476,6 +480,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
           deaths: participant.deaths,
           assists: participant.assists,
           win: participant.win,
+          isRemake,
           damage: participant.totalDamageDealtToChampions,
           gameDuration: matchData.info.gameDuration,
           gameCreation: matchData.info.gameCreation,
@@ -702,7 +707,8 @@ export async function fetchMatchesForPuuid(puuid: string, server: string, start:
         score: calcMVPScore(p, teamKills),
       }));
       mvpScores.sort((a, b) => b.score - a.score);
-      const isMVP = participant.win && mvpScores[0]?.puuid === participant.puuid;
+      const isRemake = Boolean(participant.gameEndedInEarlySurrender && matchData.info.gameDuration < 300) || matchData.info.gameDuration < 240;
+      const isMVP = !isRemake && participant.win && mvpScores[0]?.puuid === participant.puuid;
 
       // Extract all participants
       const allParticipants = matchData.info.participants.map(p =>
@@ -717,6 +723,7 @@ export async function fetchMatchesForPuuid(puuid: string, server: string, start:
         deaths: participant.deaths,
         assists: participant.assists,
         win: participant.win,
+        isRemake,
         damage: participant.totalDamageDealtToChampions,
         gameDuration: matchData.info.gameDuration,
         gameCreation: matchData.info.gameCreation,

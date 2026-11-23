@@ -9,22 +9,24 @@ const getOpenAIClient = () => {
 };
 
 export async function generateAIEvaluation(profile: SummonerProfileData, locale: string = 'zh'): Promise<string> {
-  const recentWins = profile.recentMatches.filter(m => m.win).length;
-  const recentWinRate = (recentWins / profile.recentMatches.length) * 100;
+  const validMatches = profile.recentMatches.filter(m => !m.isRemake && m.gameDuration >= 270);
+  const evalMatches = validMatches.length > 0 ? validMatches : profile.recentMatches;
+  const recentWins = evalMatches.filter(m => m.win).length;
+  const recentWinRate = evalMatches.length > 0 ? Math.round((recentWins / evalMatches.length) * 100) : 0;
   
   let totalKills = 0, totalDeaths = 0, totalAssists = 0;
   const champCount: Record<string, number> = {};
   
-  profile.recentMatches.forEach(m => {
+  evalMatches.forEach(m => {
     totalKills += m.kills;
     totalDeaths += m.deaths;
     totalAssists += m.assists;
     champCount[m.championName] = (champCount[m.championName] || 0) + 1;
   });
 
-  const avgKills = (totalKills / profile.recentMatches.length).toFixed(1);
-  const avgDeaths = (totalDeaths / profile.recentMatches.length).toFixed(1);
-  const avgAssists = (totalAssists / profile.recentMatches.length).toFixed(1);
+  const avgKills = evalMatches.length > 0 ? (totalKills / evalMatches.length).toFixed(1) : '0.0';
+  const avgDeaths = evalMatches.length > 0 ? (totalDeaths / evalMatches.length).toFixed(1) : '0.0';
+  const avgAssists = evalMatches.length > 0 ? (totalAssists / evalMatches.length).toFixed(1) : '0.0';
   const avgKDA = totalDeaths === 0 ? 'Perfect' : ((totalKills + totalAssists) / totalDeaths).toFixed(2);
   
   const mostPlayedChamps = Object.entries(champCount)
@@ -113,7 +115,12 @@ Please output ONLY your entertaining evaluation without any extra explanation. B
 
 export async function generateSingleMatchEvaluation(match: any, locale: string = 'zh'): Promise<string> {
   const kda = match.deaths === 0 ? 'Perfect' : ((match.kills + match.assists) / match.deaths).toFixed(2);
-  const resultText = match.win ? (locale === 'en' ? 'Victory' : '胜利') : (locale === 'en' ? 'Defeat' : '失败');
+  const isRemake = Boolean(match.isRemake) || (typeof match.gameDuration === 'number' && match.gameDuration < 270);
+  const resultText = isRemake
+    ? (locale === 'en' ? 'Remake' : '重开')
+    : match.win
+      ? (locale === 'en' ? 'Victory' : '胜利')
+      : (locale === 'en' ? 'Defeat' : '失败');
 
   const promptZh = `你是一个极其毒舌又极具洞察力的《英雄联盟》顶级赛事教练。
 请根据以下这场单局游戏的数据，进行一段单局赛后复盘。

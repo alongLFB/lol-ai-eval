@@ -104,6 +104,10 @@ function formatKDA(kills: number, deaths: number, assists: number): string {
   return ((kills + assists) / deaths).toFixed(2);
 }
 
+function isRemakeMatch(match: EnrichedMatchData): boolean {
+  return Boolean(match.isRemake) || match.gameDuration < 270;
+}
+
 function getQueueStyle(queueId: number) {
   switch (queueId) {
     case 420:
@@ -187,6 +191,7 @@ function MatchDetailPanel({
   const blueTeam = match.allParticipants.filter(p => p.teamId === 100);
   const redTeam = match.allParticipants.filter(p => p.teamId === 200);
   const blueWon = blueTeam[0]?.win ?? false;
+  const isRemake = isRemakeMatch(match);
   const maxDamage = Math.max(...match.allParticipants.map(p => p.totalDamageDealtToChampions), 1);
 
   const effectiveAvgRank = rankMode === 'solo'
@@ -198,11 +203,13 @@ function MatchDetailPanel({
       {/* Team Header */}
       <div className={cn(
         "flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-bold",
-        won ? "bg-blue-900/30 text-blue-300 border border-blue-800/40" : "bg-red-900/30 text-red-300 border border-red-800/40"
+        isRemake
+          ? "bg-slate-800/50 text-slate-300 border border-slate-700/50"
+          : won ? "bg-blue-900/30 text-blue-300 border border-blue-800/40" : "bg-red-900/30 text-red-300 border border-red-800/40"
       )}>
         <span className="flex items-center gap-1.5">
-          <span className={cn("w-2 h-2 rounded-full", won ? "bg-blue-400" : "bg-red-400")} />
-          {won ? t('victory') : t('defeat')} ({teamLabel})
+          <span className={cn("w-2 h-2 rounded-full", isRemake ? "bg-slate-400" : won ? "bg-blue-400" : "bg-red-400")} />
+          {isRemake ? t('remake') : won ? t('victory') : t('defeat')} ({teamLabel})
         </span>
         <span className="text-[10px] font-mono text-gray-400 font-normal">
           {team.reduce((acc, p) => acc + p.kills, 0)} Total Kills
@@ -379,10 +386,10 @@ function MatchDetailPanel({
     <div className="w-full">
       <div className={cn(
         "flex items-center px-4 py-2 rounded-t-lg text-sm font-bold gap-4",
-        won ? "bg-blue-900/40 text-blue-300" : "bg-red-900/40 text-red-300"
+        isRemake ? "bg-slate-800/60 text-slate-300" : won ? "bg-blue-900/40 text-blue-300" : "bg-red-900/40 text-red-300"
       )}>
         <div className="w-[180px] shrink-0">
-          <span>{won ? t('victory') : t('defeat')} ({teamLabel})</span>
+          <span>{isRemake ? t('remake') : won ? t('victory') : t('defeat')} ({teamLabel})</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400 font-normal font-mono shrink-0">
           <span className="w-16 text-center shrink-0">KDA</span>
@@ -583,7 +590,14 @@ function MatchDetailPanel({
             <span className="text-xs text-gray-400">{t('loadingRanks')}</span>
           </div>
         )}
-        <div className="w-full overflow-x-auto select-none pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+        {/* Mobile View: 100% width, zero horizontal scrolling, native vertical card list */}
+        <div className="block md:hidden space-y-4 select-none">
+          {renderMobileTeamList(blueTeam, t('blueTeam'), blueWon)}
+          {renderMobileTeamList(redTeam, t('redTeam'), !blueWon)}
+        </div>
+
+        {/* Desktop View: Wide multi-column table */}
+        <div className="hidden md:block w-full overflow-x-auto select-none pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
           <div className="min-w-[560px] space-y-4">
             {renderTeamTable(blueTeam, t('blueTeam'), blueWon)}
             {renderTeamTable(redTeam, t('redTeam'), !blueWon)}
@@ -719,7 +733,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   const winStreak = useMemo(() => {
     let streak = 0;
     for (const m of matches) {
-      if (m.gameDuration < 240) continue; // Skip remakes
+      if (isRemakeMatch(m)) continue; // Skip remakes
       if (m.win) streak++;
       else break;
     }
@@ -736,7 +750,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   }, [matches, activeTab]);
 
   const summaryStats = useMemo(() => {
-    const list = filteredMatches;
+    const list = filteredMatches.filter(m => !isRemakeMatch(m));
     const totalGames = list.length;
     if (totalGames === 0) return null;
 
@@ -808,6 +822,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
     const teammates: Record<string, { puuid: string; playerName: string; playerTag: string; summonerLevel: number; lastChampion: string; wins: number; losses: number; games: number }> = {};
 
     matches.forEach(m => {
+      if (isRemakeMatch(m)) return;
       const myParticipant = m.allParticipants.find(p => p.puuid === currentPuuid);
       if (!myParticipant) return;
       const myTeamId = myParticipant.teamId;
@@ -1361,6 +1376,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
               const kda = formatKDA(match.kills, match.deaths, match.assists);
               const kpPercent = Math.round(match.killParticipation * 100);
               const matchRankData = rankCache[match.matchId];
+              const isRemake = isRemakeMatch(match);
 
               return (
                 <div
@@ -1368,9 +1384,11 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                   key={match.matchId}
                   className={cn(
                     "rounded-xl border overflow-hidden transition-all duration-200 relative",
-                    match.win
-                      ? "bg-blue-950/20 border-blue-900/40 shadow-[inset_4px_0_0_rgba(59,130,246,0.6)]"
-                      : "bg-red-950/20 border-red-900/40 shadow-[inset_4px_0_0_rgba(239,68,68,0.6)]"
+                    isRemake
+                      ? "bg-slate-900/50 border-slate-700/50 shadow-[inset_4px_0_0_rgba(148,163,184,0.5)]"
+                      : match.win
+                        ? "bg-blue-950/20 border-blue-900/40 shadow-[inset_4px_0_0_rgba(59,130,246,0.6)]"
+                        : "bg-red-950/20 border-red-900/40 shadow-[inset_4px_0_0_rgba(239,68,68,0.6)]"
                   )}
                 >
                   {/* ──────────────────────────────────────────────────────── */}
@@ -1385,7 +1403,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     {/* Left Border color bar */}
                     <div className={cn(
                       "w-1.5 shrink-0",
-                      match.win ? "bg-blue-500" : "bg-red-500"
+                      isRemake ? "bg-slate-500" : match.win ? "bg-blue-500" : "bg-red-500"
                     )} />
 
                     <div className="flex flex-1 items-center justify-between gap-3 py-3 pl-4 pr-3 overflow-hidden min-h-[96px]">
@@ -1404,9 +1422,9 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           <div className="w-6 h-px bg-gray-700 my-0.5"></div>
                           <span className={cn(
                             "text-xs font-bold mt-0.5",
-                            match.win ? "text-blue-400" : "text-red-400"
+                            isRemake ? "text-slate-400" : match.win ? "text-blue-400" : "text-red-400"
                           )}>
-                            {match.win ? t('victory') : t('defeat')}
+                            {isRemake ? t('remake') : match.win ? t('victory') : t('defeat')}
                           </span>
                           <div className="text-[10px] text-gray-500 leading-none mt-0.5">
                             {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
@@ -1559,9 +1577,11 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                       </button>
                       <div className={cn(
                         "w-7 h-7 flex items-center justify-center rounded-md border transition-colors",
-                        match.win
-                          ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                          : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                        isRemake
+                          ? "border-slate-600/40 bg-slate-700/20 text-slate-400 hover:bg-slate-700/30"
+                          : match.win
+                            ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                            : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
                       )}>
                         <ChevronDown className={cn(
                           "w-4 h-4 transition-transform duration-250",
@@ -1581,16 +1601,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                     {/* Top Bar (OPGG style) */}
                     <div className={cn(
                       "flex items-center justify-between px-3 py-1.5 border-b",
-                      match.win
-                        ? "bg-blue-900/20 border-blue-900/30"
-                        : "bg-red-900/20 border-red-900/30"
+                      isRemake
+                        ? "bg-slate-800/40 border-slate-700/40"
+                        : match.win
+                          ? "bg-blue-900/20 border-blue-900/30"
+                          : "bg-red-900/20 border-red-900/30"
                     )}>
                       <div className="flex items-center gap-2">
                         <span className={cn(
                           "text-xs font-bold",
-                          match.win ? "text-blue-400" : "text-red-400"
+                          isRemake ? "text-slate-400" : match.win ? "text-blue-400" : "text-red-400"
                         )}>
-                          {match.win ? t('victory') : t('defeat')}
+                          {isRemake ? t('remake') : match.win ? t('victory') : t('defeat')}
                         </span>
                         <span className="text-[10px] text-gray-400 font-medium">
                           {t('timeFormat', { minutes: Math.floor(match.gameDuration / 60), seconds: (match.gameDuration % 60).toString().padStart(2, '0') })}
@@ -1619,9 +1641,11 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
                           </button>
                           <div className={cn(
                             "w-6 h-6 flex items-center justify-center rounded border",
-                            match.win
-                              ? "border-blue-500/30 bg-blue-500/10 text-blue-400"
-                              : "border-red-500/30 bg-red-500/10 text-red-400"
+                            isRemake
+                              ? "border-slate-600/40 bg-slate-700/20 text-slate-400"
+                              : match.win
+                                ? "border-blue-500/30 bg-blue-500/10 text-blue-400"
+                                : "border-red-500/30 bg-red-500/10 text-red-400"
                           )}>
                             <ChevronDown className={cn(
                               "w-3.5 h-3.5 transition-transform duration-250",
@@ -1682,26 +1706,32 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
                       {/* Items & Badges */}
                       <div className="flex items-center justify-between mt-1">
-                        <div className="flex items-center gap-1 shrink-0 overflow-x-auto scrollbar-hide">
-                          <div className="flex gap-0.5 shrink-0">
-                            {[0, 1, 2, 3, 4, 5].map((i) => (
-                              <div key={i} className={cn(
-                                "w-7 h-7 rounded overflow-hidden",
-                                (match.items[i] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
-                              )}>
-                                {(match.items[i] || 0) > 0 ? (
-                                  <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[i]}.png`} alt="" className="w-full h-full object-cover" />
-                                ) : null}
-                              </div>
-                            ))}
-                            <div className={cn(
-                              "w-7 h-7 rounded-full overflow-hidden ml-0.5 shrink-0",
-                              (match.items[6] || 0) > 0 ? "bg-gray-800" : "bg-slate-800/40 border border-slate-700/40"
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {[0, 1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className={cn(
+                              "w-6 h-6 sm:w-6.5 sm:h-6.5 rounded overflow-hidden shrink-0",
+                              (match.items[i] || 0) > 0 ? "bg-slate-800" : "bg-slate-800/40 border border-slate-700/40"
                             )}>
-                              {(match.items[6] || 0) > 0 ? (
-                                <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`} alt="" className="w-full h-full object-cover" />
+                              {(match.items[i] || 0) > 0 ? (
+                                <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[i]}.png`} alt="" className="w-full h-full object-cover" />
                               ) : null}
                             </div>
+                          ))}
+                          <div className={cn(
+                            "w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full overflow-hidden ml-0.5 shrink-0",
+                            (match.items[6] || 0) > 0 ? "bg-slate-800" : "bg-slate-800/40 border border-slate-700/40"
+                          )}>
+                            {(match.items[6] || 0) > 0 ? (
+                              <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[6]}.png`} alt="" className="w-full h-full object-cover" />
+                            ) : null}
+                          </div>
+                          <div className={cn(
+                            "w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full overflow-hidden shrink-0",
+                            (match.items[7] || 0) > 0 ? "bg-slate-800" : "bg-slate-800/40 border border-slate-700/40"
+                          )}>
+                            {(match.items[7] || 0) > 0 ? (
+                              <img crossOrigin="anonymous" src={`https://ddragon.leagueoflegends.com/cdn/${latestPatch}/img/item/${match.items[7]}.png`} alt="" className="w-full h-full object-cover" />
+                            ) : null}
                           </div>
                         </div>
 
