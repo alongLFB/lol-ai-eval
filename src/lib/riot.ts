@@ -178,6 +178,7 @@ export interface EnrichedMatchData {
 export type CleanedMatchData = EnrichedMatchData;
 
 export interface SummonerProfileData {
+  puuid?: string;
   gameName: string;
   tagLine: string;
   summonerLevel: number;
@@ -198,6 +199,7 @@ export interface SummonerProfileData {
   flexWins: number;
   flexLosses: number;
   flexLP: number;
+  winStreak?: number;
 }
 
 // ── Queue ID to name mapping ──
@@ -508,9 +510,64 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     });
 
     const rawMatches = await Promise.all(matchPromises);
-    const recentMatches = rawMatches
-      .filter((m): m is EnrichedMatchData => m !== null)
-      .slice(0, 20);
+    const validRawMatches = rawMatches.filter((m): m is EnrichedMatchData => m !== null);
+    const recentMatches = validRawMatches.slice(0, 20);
+
+    // Compute true win streak (skipping remakes), probing past 25 matches only if streak is still unbroken
+    let winStreak = 0;
+    let streakBroken = false;
+    for (const m of validRawMatches) {
+      if (m.isRemake || m.gameDuration < 270) continue;
+      if (m.win) {
+        winStreak++;
+      } else {
+        streakBroken = true;
+        break;
+      }
+    }
+
+    if (!streakBroken && matchIds.length >= 25) {
+      let probeStart = matchIds.length;
+      const MAX_PROBE = 100;
+      while (!streakBroken && probeStart < MAX_PROBE) {
+        try {
+          const extraIdsUrl = `https://${matchRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${account.puuid}/ids?start=${probeStart}&count=15`;
+          const extraIds: string[] = await fetchRiot(extraIdsUrl);
+          if (!extraIds || extraIds.length === 0) break;
+
+          const extraMatches = await Promise.all(
+            extraIds.map(async (mId) => {
+              try {
+                const mData: MatchDto = await fetchRiot(`https://${matchRegion}.api.riotgames.com/lol/match/v5/matches/${mId}`);
+                const p = mData.info.participants.find(x => x.puuid === account.puuid);
+                if (!p) return null;
+                const isRemake = Boolean(p.gameEndedInEarlySurrender && mData.info.gameDuration < 300) || mData.info.gameDuration < 240;
+                return { win: p.win, isRemake, gameDuration: mData.info.gameDuration };
+              } catch {
+                return null;
+              }
+            })
+          );
+
+          for (const em of extraMatches) {
+            if (!em) continue;
+            if (em.isRemake || em.gameDuration < 270) continue;
+            if (em.win) {
+              winStreak++;
+            } else {
+              streakBroken = true;
+              break;
+            }
+          }
+
+          if (extraIds.length < 15) break;
+          probeStart += extraIds.length;
+        } catch (e) {
+          console.warn('Failed probing extended win streak:', e);
+          break;
+        }
+      }
+    }
 
     const wins = activeSolo?.wins || 0;
     const losses = activeSolo?.losses || 0;
@@ -533,6 +590,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
     const ladder = calculateLadderStats(activeSolo?.tier || 'UNRANKED', activeSolo?.rank || '', lp, server);
 
     return {
+      puuid: account.puuid,
       gameName: account.gameName,
       tagLine: account.tagLine,
       summonerLevel: summoner.summonerLevel,
@@ -553,6 +611,7 @@ export async function fetchSummonerData(gameName: string, tagLine: string, serve
       flexWins: flexQueue?.wins || 0,
       flexLosses: flexQueue?.losses || 0,
       flexLP: flexQueue?.leaguePoints || 0,
+      winStreak,
     };
   } catch (error: any) {
     if (error.message.includes('not configured')) {

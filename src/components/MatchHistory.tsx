@@ -679,19 +679,18 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(profile.recentMatches.length >= 20);
 
-  const currentProfileId = `${profile.gameName}#${profile.tagLine}`;
-  const [prevProfileId, setPrevProfileId] = useState(currentProfileId);
+  const [prevRecentMatches, setPrevRecentMatches] = useState(profile.recentMatches);
 
-  // Synchronously reset local matches list when the searched summoner profile changes
-  if (currentProfileId !== prevProfileId) {
+  // Synchronously reset local matches list when summoner changes or Force Refresh completes
+  if (profile.recentMatches !== prevRecentMatches) {
     setMatches(profile.recentMatches);
     setHasMore(profile.recentMatches.length >= 20);
-    setPrevProfileId(currentProfileId);
+    setPrevRecentMatches(profile.recentMatches);
     setExpandedMatch(null);
   }
 
-  const currentPuuid = profile.recentMatches[0]?.allParticipants.find(p =>
-    p.playerName === profile.gameName
+  const currentPuuid = profile.puuid || profile.recentMatches[0]?.allParticipants.find(p =>
+    p.playerName.toLowerCase() === profile.gameName.toLowerCase()
   )?.puuid;
 
   const handleLoadMore = async () => {
@@ -732,13 +731,21 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
 
   const winStreak = useMemo(() => {
     let streak = 0;
+    let broken = false;
     for (const m of matches) {
       if (isRemakeMatch(m)) continue; // Skip remakes
-      if (m.win) streak++;
-      else break;
+      if (m.win) {
+        streak++;
+      } else {
+        broken = true;
+        break;
+      }
+    }
+    if (!broken && typeof profile.winStreak === 'number') {
+      return Math.max(streak, profile.winStreak);
     }
     return streak;
-  }, [matches]);
+  }, [matches, profile.winStreak]);
 
   const filteredMatches = useMemo(() => {
     return matches.filter(m => {
