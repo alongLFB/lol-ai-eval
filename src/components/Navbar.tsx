@@ -17,42 +17,43 @@ export function Navbar() {
   const isHome = !isLeaderboards;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/75 backdrop-blur-xl transition-all shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-1 sm:gap-2">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl transition-all shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
+      {/* Row 1: Brand + Desktop Nav + Right Controls (Sound & Language always visible on mobile) */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
         {/* Brand / Logo */}
         <Link 
           href={`/${locale}`}
           onClick={() => sound.playClick()}
           onMouseEnter={() => sound.playHover()}
-          className="group flex items-center gap-2 sm:gap-2.5 text-base sm:text-xl font-black tracking-tight shrink-0"
+          className="group flex items-center gap-2 sm:gap-2.5 text-base sm:text-xl font-black tracking-tight min-w-0"
         >
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 via-blue-600/30 to-purple-600/20 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 via-blue-600/30 to-purple-600/20 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all shrink-0">
             <Swords className="w-4 h-4 text-cyan-300 transition-transform group-hover:rotate-12 duration-300" />
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-75" />
           </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-300 bg-clip-text text-transparent group-hover:text-glow-cyan transition-all">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-300 bg-clip-text text-transparent group-hover:text-glow-cyan transition-all truncate">
               {locale === 'zh' ? 'LOL AI 神谕' : 'LOL AI ORACLE'}
             </span>
-            <span className="text-[10px] uppercase font-mono tracking-widest px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/40 text-cyan-400 hidden sm:inline-block">
+            <span className="text-[10px] uppercase font-mono tracking-widest px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/40 text-cyan-400 hidden sm:inline-block shrink-0">
               PRO
             </span>
           </div>
         </Link>
 
-        {/* Navigation Tabs */}
-        <nav className="flex items-center space-x-1 sm:space-x-1.5 bg-slate-900/90 p-1 rounded-full border border-slate-800/80 shadow-inner backdrop-blur-md">
+        {/* Desktop Navigation Tabs (md+) */}
+        <nav className="hidden md:flex items-center space-x-1.5 bg-slate-900/90 p-1 rounded-full border border-slate-800/80 shadow-inner backdrop-blur-md shrink-0">
           <Link
             href={`/${locale}`}
             onClick={() => sound.playClick()}
             onMouseEnter={() => sound.playHover()}
-            className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               isHome
                 ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25 ring-1 ring-cyan-400/30'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <Swords className="w-3.5 h-3.5" />
+            <Swords className="w-3.5 h-3.5 shrink-0" />
             <span>{t('home')}</span>
           </Link>
 
@@ -60,13 +61,13 @@ export function Navbar() {
             href={`/${locale}/leaderboards`}
             onClick={() => sound.playClick()}
             onMouseEnter={() => sound.playHover()}
-            className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               isLeaderboards
                 ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-md shadow-amber-500/25 ring-1 ring-amber-400/30'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <Trophy className="w-3.5 h-3.5 text-amber-300" />
+            <Trophy className="w-3.5 h-3.5 text-amber-300 shrink-0" />
             <span>{t('leaderboards')}</span>
           </Link>
         </nav>
@@ -82,6 +83,37 @@ export function Navbar() {
           <SoundToggle />
           <LanguageSwitcher />
         </div>
+      </div>
+
+      {/* Row 2: Mobile Navigation Tabs (< md) — full width 2-column segmented bar, never crowds Language Switcher */}
+      <div className="md:hidden border-t border-slate-800/60 bg-slate-950/60 px-3 py-1.5">
+        <nav className="grid grid-cols-2 gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800/80">
+          <Link
+            href={`/${locale}`}
+            onClick={() => sound.playClick()}
+            className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer truncate ${
+              isHome
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-sm shadow-cyan-500/25 ring-1 ring-cyan-400/30'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <Swords className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">{t('home')}</span>
+          </Link>
+
+          <Link
+            href={`/${locale}/leaderboards`}
+            onClick={() => sound.playClick()}
+            className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer truncate ${
+              isLeaderboards
+                ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-sm shadow-amber-500/25 ring-1 ring-amber-400/30'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <span className="truncate">{t('leaderboards')}</span>
+          </Link>
+        </nav>
       </div>
     </header>
   );

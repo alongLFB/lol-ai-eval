@@ -261,20 +261,20 @@ function HomeContent() {
     <div className="relative z-10 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-2.5 sm:px-6 py-8 md:py-20 relative w-full">
         {/* Hero Section */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-8 sm:mb-10 px-1">
           {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/40 text-cyan-300 text-xs font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            <span>LEAGUE OF LEGENDS RUNIC ORACLE // S15</span>
+          <div className="inline-flex items-center gap-2 mb-4 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/40 text-cyan-300 text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.15)] max-w-full">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
+            <span className="truncate">LEAGUE OF LEGENDS RUNIC ORACLE // S15</span>
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-200 via-blue-400 to-indigo-400 drop-shadow-[0_10px_30px_rgba(6,182,212,0.2)]">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-4 sm:mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-200 via-blue-400 to-indigo-400 drop-shadow-[0_10px_30px_rgba(6,182,212,0.2)]">
             {t('title')}
           </h1>
 
           {/* Subtitle */}
-          <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className="text-slate-400 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
             {t('subtitle')}
           </p>
         </div>

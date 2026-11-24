@@ -184,7 +184,7 @@ export default function LeaderboardsPage() {
   const endRank = currentPage * pageSize;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-slate-100 py-6 sm:py-8 px-3 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Top Info Banner (OP.GG style) */}
@@ -192,7 +192,7 @@ export default function LeaderboardsPage() {
           <div>
             {t('serverSummonersInfo', { total: totalSummoners.toLocaleString() })}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
             <span>{t('notice')}</span>
             <button
               onClick={() => loadLeaderboard(currentServer, currentTier, currentPage, true)}
@@ -440,7 +440,7 @@ export default function LeaderboardsPage() {
 
                             {/* Summoner ID */}
                             <td className="py-3.5 px-4">
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
                                 <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700/80 flex items-center justify-center font-bold text-slate-300 text-xs">
                                   {item.gameName.charAt(0).toUpperCase()}
                                 </div>

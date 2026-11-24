@@ -1080,7 +1080,7 @@ export function MatchHistory({ profile, server }: { profile: SummonerProfileData
       </div>
 
       {/* ── Game Mode Tab Filters ── */}
-      <div className="grid grid-cols-4 sm:flex border-b border-gray-800 gap-1 pb-px">
+      <div className="grid grid-cols-2 sm:flex border-b border-gray-800 gap-1 pb-px">
         {[
           { id: 'ALL', label: t('tabs.ALL') },
           { id: 'SOLO', label: t('tabs.SOLO') },
